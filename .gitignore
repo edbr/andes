@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Large OSM route exports (never commit)
+public/data/osm_routes*.geojson
