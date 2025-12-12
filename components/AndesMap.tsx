@@ -272,7 +272,7 @@ map.addLayer({
       // ----------------------------------------------------------
       map.addSource("osm-routes", {
         type: "geojson",
-        data: "/data/osm_routes.geojson",
+        data: "/data/osm_routes_clean.geojson",
       });
 
       map.addLayer({
