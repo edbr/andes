@@ -1,0 +1,266 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cerro Catedral",
+        "contact:website": "https://www.catedralaltapatagonia.com",
+        "operator": "Catedral Alta Patagonia",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4646471,
+          -41.1666796
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "La Hoya",
+        "contact:website": "https://skilahoya.com/",
+        "wikidata": "Q3209806",
+        "wikipedia": "es:La Hoya (Argentina)",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.2576458,
+          -42.821551
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Parque de Nieve Primeros Pinos",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.5795715,
+          -38.8711865
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Parque de Nieve Batea Mahuida",
+        "contact:website": "http://www.cerrobateamahuida.com/",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.2229566,
+          -38.8317057
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cerro Bayo",
+        "contact:website": "https://www.cerrobayo.com.ar/",
+        "wikidata": "Q313632",
+        "wikipedia": "es:Cerro Bayo",
+        "operator": "Cerro Bayo S.A.",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.6020602,
+          -40.7497454
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cerro Perito Moreno",
+        "contact:website": "https://laderas.com.ar/",
+        "operator": "LADERAS S.A.",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5882853,
+          -41.7850392
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Chapelco Ski Resort",
+        "contact:website": "https://www.chapelco.com/",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.3026685,
+          -40.2095781
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Centro Ski Pucón",
+        "contact:website": "http://www.skipucon.cl/",
+        "wikidata": "Q17626264",
+        "wikipedia": "es:Pucón (centro de esquí)",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.9587621,
+          -39.3922663
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Volcán Osorno",
+        "contact:website": "https://www.volcanosorno.com/",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.5231996,
+          -41.1216527
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Las Leñas",
+        "contact:website": "https://www.laslenas.com/",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.1030451,
+          -35.1366103
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Portillo",
+        "contact:website": "https://www.skiportillo.com/",
+        "operator": "Ski Portillo",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.1318019,
+          -32.8384045
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Centro de Ski Chapa Verde",
+        "contact:website": "https://chapaverde.cl/",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.4101716,
+          -34.0472321
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Los Puquios",
+        "contact:website": "https://www.lospuquios.com.ar/",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.8906008,
+          -32.8230153
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Los Penitentes",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.8343652,
+          -32.8311549
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Caviahue",
+        "website": "https://www.caviahue.com/invierno",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.0945631,
+          -37.8547826
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Estación Esquí Antillanca",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.1987628,
+          -40.7672544
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Corralco",
+        "landuse": "winter_sports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5641744,
+          -38.3977221
+        ]
+      }
+    }
+  ]
+}

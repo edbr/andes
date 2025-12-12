@@ -1,0 +1,41 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Nevados de Chillán Ski Resort",
+        "elevation_m": 1940,
+        "country": "Chile"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-71.377, -36.863]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Portillo",
+        "elevation_m": 2890,
+        "country": "Chile"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-70.123, -32.833]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "La Parva",
+        "elevation_m": 2680,
+        "country": "Chile"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-70.286, -33.349]
+      }
+    }
+  ]
+}
