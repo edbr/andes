@@ -7,6 +7,7 @@ import SidebarFilters from "@/components/SidebarFilters";
 import type { Feature, Point } from "geojson";
 import type { FilterSpecification } from "maplibre-gl";
 import MapLegend from "@/components/MapLegend";
+import { Protocol } from "pmtiles";
 
 // ------------------------------------------------------------
 // TYPES
@@ -106,6 +107,9 @@ export default function AndesMap() {
   // MAP INITIALIZATION
   // ------------------------------------------------------------
   useEffect(() => {
+    const protocol = new Protocol();
+    maplibregl.addProtocol("pmtiles", protocol.tile);
+
     const map = new maplibregl.Map({
       container: mapContainer.current!,
       style: `https://api.maptiler.com/maps/outdoor/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_KEY}`,
@@ -148,23 +152,23 @@ export default function AndesMap() {
         type: "geojson",
         data: "/data/mountain-volcano-clean.geojson",
       });
-map.addLayer({
-  id: "volcano-points",
-  type: "symbol",
-  source: "mountain-volcano",
-  filter: [
-    "all",
-    ["==", ["get", "natural"], "volcano"],
-    ["has", "name"],
-    ["!=", ["get", "name"], ""],
-  ],
-  layout: {
-    "icon-image": "volcano-icon",
-    "icon-size": 0.9,
-    "icon-anchor": "bottom",
-    "icon-allow-overlap": true,
-  },
-});
+      map.addLayer({
+        id: "volcano-points",
+        type: "symbol",
+        source: "mountain-volcano",
+        filter: [
+          "all",
+          ["==", ["get", "natural"], "volcano"],
+          ["has", "name"],
+          ["!=", ["get", "name"], ""],
+        ],
+        layout: {
+          "icon-image": "volcano-icon",
+          "icon-size": 0.9,
+          "icon-anchor": "bottom",
+          "icon-allow-overlap": true,
+        },
+      });
       map.addLayer({
         id: "mountain-points",
         type: "symbol",
@@ -271,21 +275,58 @@ map.addLayer({
       // ROUTES
       // ----------------------------------------------------------
       map.addSource("osm-routes", {
-        type: "geojson",
-        data: "/data/osm_routes_clean.geojson",
+        type: "vector",
+        url: "pmtiles:///data/osm_routes.pmtiles",
       });
 
-      map.addLayer({
-        id: "osm-routes-line",
-        type: "line",
-        source: "osm-routes",
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": "#1976D2",
-          "line-width": 2,
-          "line-opacity": 0.9,
-        },
-      });
+map.addLayer({
+  id: "osm-routes-line",
+  type: "line",
+  source: "osm-routes",
+  "source-layer": "osm_routes_clean", // ← FIXED
+  layout: {
+    "line-cap": "round",
+    "line-join": "round",
+  },
+  paint: {
+    "line-color": [
+      "case",
+
+      // Ski routes
+      [
+        "any",
+        ["==", ["get", "route"], "ski"],
+        ["==", ["get", "piste:type"], "skitour"]
+      ],
+      "#00A8FF",
+
+      // Hiking / mountaineering
+      [
+        "any",
+        ["==", ["get", "route"], "hiking"],
+        ["==", ["get", "highway"], "path"],
+        ["has", "sac_scale"]
+      ],
+      "#000000",
+
+      // Default
+      "#1976D2"
+    ],
+
+    "line-width": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      5, 0.0,
+      7, 1.5,
+      9, 1.5,
+      11, 1.5
+    ],
+
+    "line-opacity": 0.9
+  }
+});
+
 
       // ----------------------------------------------------------
       // SKI RESORTS
