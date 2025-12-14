@@ -11,7 +11,7 @@ export default function MapLegend() {
       {/* =========================
           POINT FEATURES
       ========================= */}
-      <div className="mb-3">
+      <div className="mb-4">
         <p className="text-xs font-medium text-gray-500 mb-2 uppercase">
           Points
         </p>
@@ -49,18 +49,27 @@ export default function MapLegend() {
           Routes
         </p>
 
-        <LegendLine color="#1976D2" label="Route / Trail" />
+        <LegendLine
+          color="#4FC3F7"
+          label="Ski Route / Ski Tour"
+        />
 
-        <LegendLine color="#00A8A8" label="Ski Tour / Skin Track" />
+        <LegendLine
+          color="#5A5A5A"
+          label="Mountain Hiking / Alpine Access"
+        />
 
-        <LegendLine color="#D32F2F" label="Serious / Alpine Terrain" />
+        <LegendLine
+          color="#B0B8C0"
+          label="Urban / Lowland Path"
+        />
       </div>
     </div>
   );
 }
 
 /* --------------------------------
-   Small helper components
+   Helper components
 -------------------------------- */
 
 function LegendRow({

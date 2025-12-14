@@ -1,4 +1,4 @@
-import AndesMap from "@/components/AndesMap";
+import AndesMap from "@/components/map/AndesMap";
 
 export default function Home() {
   return (

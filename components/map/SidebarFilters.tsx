@@ -40,10 +40,10 @@ export default function SidebarFilters({
 
   const [routesVisible, setRoutesVisible] = useState(true);
   const [skiOnly, setSkiOnly] = useState(false);
-  const [skiResortsVisible, setSkiResortsVisible] = useState(true);
-  const [volcanoesVisible, setVolcanoesVisible] = useState(true);
-  const [mountainsVisible, setMountainsVisible] = useState(true); // ✅ NEW
-  const [parkingVisible, setParkingVisible] = useState(true); // ✅ NEW
+  const [skiResortsVisible, setSkiResortsVisible] = useState(false);
+  const [volcanoesVisible, setVolcanoesVisible] = useState(false);
+  const [mountainsVisible, setMountainsVisible] = useState(false); // ✅ NEW
+  const [parkingVisible, setParkingVisible] = useState(false); // ✅ NEW
 
   function updateFilters(partial: any) {
     onFilterChange({
@@ -147,17 +147,16 @@ export default function SidebarFilters({
           </div>
 
           {/* Mountains */}
-<div className="flex items-center justify-between">
-  <Label className="text-sm font-medium">Show Mountains</Label>
-  <Switch
-    checked={mountainsVisible}
-    onCheckedChange={(checked) => {
-      setMountainsVisible(checked);
-      onToggleMountains(checked);
-    }}
-  />
-</div>
-
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium">Show Mountains</Label>
+          <Switch
+            checked={mountainsVisible}
+            onCheckedChange={(checked) => {
+              setMountainsVisible(checked);
+              onToggleMountains(checked);
+            }}
+          />
+        </div>
 
           {/* Parking */}
           <div className="flex items-center justify-between">
