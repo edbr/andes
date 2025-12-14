@@ -20,12 +20,19 @@ import { MAP_STYLES, type MapStyleKey } from "@/map/styles";
 
 import type { FilterSpecification } from "maplibre-gl";
 
-// ------------------------------------------------------------
-// MAIN
-// ------------------------------------------------------------
+
+// ============================================================
+// ANDES MAP (Client-only, hydration-safe)
+// ============================================================
 export default function AndesMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+
+  // ------------------------------------------------------------
+  // HYDRATION GUARD (CRITICAL)
+  // ------------------------------------------------------------
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // ------------------------------------------------------------
   // STATE
@@ -36,13 +43,12 @@ export default function AndesMap() {
 
   const [mapStyle, setMapStyle] = useState<MapStyleKey>("topo");
 
-  const [layerVisibility, setLayerVisibility] = useState({
-  routes: true,
-  volcanoes: false,
-  mountains: false,
-  skiResorts: false,
-  parking: false,
-});
+  const isMobile =
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 768px)").matches;
+
+  const [showSidebar, setShowSidebar] = useState(!isMobile);
+  const [showLegend, setShowLegend] = useState(!isMobile);
 
   // ------------------------------------------------------------
   // FILTERS
@@ -70,9 +76,13 @@ export default function AndesMap() {
   const toggleLayer =
     (id: string) => (visible: boolean) => {
       const map = mapRef.current;
-      if (map?.getLayer(id)) {
-        map.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
-      }
+      if (!map?.getLayer(id)) return;
+
+      map.setLayoutProperty(
+        id,
+        "visibility",
+        visible ? "visible" : "none"
+      );
     };
 
   const toggleRoutes = toggleLayer("osm-routes-line");
@@ -118,9 +128,11 @@ export default function AndesMap() {
   }
 
   // ------------------------------------------------------------
-  // MAP INIT
+  // MAP INITIALIZATION
   // ------------------------------------------------------------
   useEffect(() => {
+    if (!mounted) return;
+
     registerPMTiles();
 
     const map = new maplibregl.Map({
@@ -150,10 +162,10 @@ export default function AndesMap() {
     return () => {
       map.remove();
     };
-  }, []);
+  }, [mounted]);
 
   // ------------------------------------------------------------
-  // HANDLE MAP STYLE CHANGE
+  // MAP STYLE CHANGE HANDLER
   // ------------------------------------------------------------
   function handleStyleChange(style: MapStyleKey) {
     const map = mapRef.current;
@@ -172,28 +184,76 @@ export default function AndesMap() {
   }
 
   // ------------------------------------------------------------
+  // SSR SAFETY
+  // ------------------------------------------------------------
+  if (!mounted) {
+    return null;
+  }
+
+  // ------------------------------------------------------------
   // UI
   // ------------------------------------------------------------
   return (
     <div className="relative w-full h-screen">
-      <SidebarFilters
-        onFilterChange={setFilters}
-        onToggleRoutes={toggleRoutes}
-        onToggleSkiOnly={toggleSkiRoutesOnly}
-        onToggleSkiResorts={toggleSkiResorts}
-        onToggleVolcanoes={toggleVolcanoes}
-        onToggleMountains={toggleMountains}
-        onToggleParking={toggleParking}
-      />
+      {/* =========================
+          Mobile Toggles
+      ========================= */}
+      <div className="absolute top-4 left-4 z-50 flex gap-2 md:hidden">
+        <button
+          onClick={() => setShowSidebar((v) => !v)}
+          className="px-3 py-1 text-sm rounded-md bg-white/90 shadow"
+        >
+          Filters
+        </button>
 
-      <MapStyleSelector
-        value={mapStyle}
-        onChange={handleStyleChange}
-      />
+        <button
+          onClick={() => setShowLegend((v) => !v)}
+          className="px-3 py-1 text-sm rounded-md bg-white/90 shadow"
+        >
+          Legend
+        </button>
+      </div>
 
+      {/* =========================
+          Sidebar
+      ========================= */}
+      {showSidebar && (
+        <div className="absolute top-0 left-0 z-40">
+          <SidebarFilters
+            onFilterChange={setFilters}
+            onToggleRoutes={toggleRoutes}
+            onToggleSkiOnly={toggleSkiRoutesOnly}
+            onToggleSkiResorts={toggleSkiResorts}
+            onToggleVolcanoes={toggleVolcanoes}
+            onToggleMountains={toggleMountains}
+            onToggleParking={toggleParking}
+          />
+        </div>
+      )}
+
+      {/* =========================
+          Map Canvas (never animated)
+      ========================= */}
       <div ref={mapContainer} className="w-full h-full" />
 
-      <MapLegend />
+      {/* =========================
+          Legend
+      ========================= */}
+      {showLegend && (
+        <div className="absolute bottom-4 left-4 z-40">
+          <MapLegend />
+        </div>
+      )}
+
+      {/* =========================
+          Style Selector (desktop)
+      ========================= */}
+      <div className="absolute top-4 right-4 z-40 hidden md:block">
+        <MapStyleSelector
+          value={mapStyle}
+          onChange={handleStyleChange}
+        />
+      </div>
     </div>
   );
 }
