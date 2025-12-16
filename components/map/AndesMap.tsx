@@ -60,6 +60,7 @@ export default function AndesMap() {
     }
 
     // ---- Protected Areas ----
+    
     map.on("mousemove", "protected-areas-fill", (e) => {
       const feature = e.features?.[0];
       if (!feature || !popupRef.current) return;
@@ -74,7 +75,7 @@ export default function AndesMap() {
       popupRef.current
         .setLngLat(e.lngLat)
         .setHTML(`
-          <div class="tooltip">
+          <div class="andes-tooltip tooltip">
             <div class="tooltip-title">${name}</div>
             <div class="tooltip-sub">${category}</div>
           </div>

@@ -124,25 +124,28 @@
 
 .andes-tooltip {
   font-family: system-ui, -apple-system, sans-serif;
+  color: #0f172a; /* slate-900 */
 }
 
 .tooltip {
-  background: rgba(15, 23, 42, 0.95);
-  color: white;
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  line-height: 1.2;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  background: transparent; /* let popup handle background */
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-size: 13px;
+  line-height: 1.25;
+  box-shadow: none;
 }
 
 .tooltip-title {
   font-weight: 600;
   margin-bottom: 2px;
+  color: #020617; /* near-black */
 }
 
 .tooltip-sub {
-  opacity: 0.75;
   font-size: 11px;
-  text-transform: capitalize;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569; /* slate-600 */
 }
