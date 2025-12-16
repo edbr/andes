@@ -120,3 +120,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+.andes-tooltip {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.tooltip {
+  background: rgba(15, 23, 42, 0.95);
+  color: white;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.tooltip-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.tooltip-sub {
+  opacity: 0.75;
+  font-size: 11px;
+  text-transform: capitalize;
+}

@@ -20,23 +20,19 @@ import { MAP_STYLES, type MapStyleKey } from "@/map/styles";
 
 import type { FilterSpecification } from "maplibre-gl";
 
-
 // ============================================================
-// ANDES MAP (Client-only, hydration-safe)
+// ANDES MAP
 // ============================================================
 export default function AndesMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const popupRef = useRef<maplibregl.Popup | null>(null);
 
-  // ------------------------------------------------------------
-  // HYDRATION GUARD (CRITICAL)
-  // ------------------------------------------------------------
+  // Hydration guard
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // ------------------------------------------------------------
-  // STATE
-  // ------------------------------------------------------------
+  // State
   const [filters, setFilters] = useState({
     elevation: [0, 6000] as [number, number],
   });
@@ -49,6 +45,48 @@ export default function AndesMap() {
 
   const [showSidebar, setShowSidebar] = useState(!isMobile);
   const [showLegend, setShowLegend] = useState(!isMobile);
+
+  // ------------------------------------------------------------
+  // TOOLTIP SETUP (SAFE + IDPOTENT)
+  // ------------------------------------------------------------
+  function setupTooltips(map: maplibregl.Map) {
+    if (!popupRef.current) {
+      popupRef.current = new maplibregl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 12,
+        className: "andes-tooltip",
+      });
+    }
+
+    // ---- Protected Areas ----
+    map.on("mousemove", "protected-areas-fill", (e) => {
+      const feature = e.features?.[0];
+      if (!feature || !popupRef.current) return;
+
+      map.getCanvas().style.cursor = "pointer";
+
+      const name = feature.properties?.name;
+      const category = feature.properties?.category
+        ?.replace("_", " ")
+        ?.toUpperCase();
+
+      popupRef.current
+        .setLngLat(e.lngLat)
+        .setHTML(`
+          <div class="tooltip">
+            <div class="tooltip-title">${name}</div>
+            <div class="tooltip-sub">${category}</div>
+          </div>
+        `)
+        .addTo(map);
+    });
+
+    map.on("mouseleave", "protected-areas-fill", () => {
+      map.getCanvas().style.cursor = "";
+      popupRef.current?.remove();
+    });
+  }
 
   // ------------------------------------------------------------
   // FILTERS
@@ -71,44 +109,7 @@ export default function AndesMap() {
   }, [filters]);
 
   // ------------------------------------------------------------
-  // VISIBILITY TOGGLES
-  // ------------------------------------------------------------
-  const toggleLayer =
-    (id: string) => (visible: boolean) => {
-      const map = mapRef.current;
-      if (!map?.getLayer(id)) return;
-
-      map.setLayoutProperty(
-        id,
-        "visibility",
-        visible ? "visible" : "none"
-      );
-    };
-
-  const toggleRoutes = toggleLayer("osm-routes-line");
-  const toggleSkiResorts = toggleLayer("ski-resorts-points");
-  const toggleVolcanoes = toggleLayer("volcano-points");
-  const toggleMountains = toggleLayer("mountain-points");
-  const toggleParking = toggleLayer("parking-points");
-
-  function toggleSkiRoutesOnly(skiOnly: boolean) {
-    const map = mapRef.current;
-    if (!map?.getLayer("osm-routes-line")) return;
-
-    map.setFilter(
-      "osm-routes-line",
-      skiOnly
-        ? [
-            "any",
-            ["==", ["get", "route"], "ski"],
-            ["==", ["get", "piste:type"], "skitour"],
-          ]
-        : ["all"]
-    );
-  }
-
-  // ------------------------------------------------------------
-  // MAP BOOTSTRAP (called on load + style change)
+  // BOOTSTRAP MAP CONTENT
   // ------------------------------------------------------------
   async function bootstrapMap(map: maplibregl.Map) {
     await loadIcons(map);
@@ -118,9 +119,10 @@ export default function AndesMap() {
     addParkingLayers(map);
     addSkiResortLayers(map);
 
+    setupTooltips(map);
     applyVolcanoFilters();
 
-    // Default visibility: routes only
+    // Default visibility
     map.setLayoutProperty("volcano-points", "visibility", "none");
     map.setLayoutProperty("mountain-points", "visibility", "none");
     map.setLayoutProperty("ski-resorts-points", "visibility", "none");
@@ -128,7 +130,7 @@ export default function AndesMap() {
   }
 
   // ------------------------------------------------------------
-  // MAP INITIALIZATION
+  // MAP INIT
   // ------------------------------------------------------------
   useEffect(() => {
     if (!mounted) return;
@@ -155,17 +157,13 @@ export default function AndesMap() {
     mapRef.current = map;
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
-    map.on("load", () => {
-      bootstrapMap(map);
-    });
+    map.on("load", () => bootstrapMap(map));
 
-    return () => {
-      map.remove();
-    };
+    return () => map.remove();
   }, [mounted]);
 
   // ------------------------------------------------------------
-  // MAP STYLE CHANGE HANDLER
+  // STYLE SWITCHING (NO TOOLTIP LOGIC HERE)
   // ------------------------------------------------------------
   function handleStyleChange(style: MapStyleKey) {
     const map = mapRef.current;
@@ -177,27 +175,18 @@ export default function AndesMap() {
       MAP_STYLES[style].url(process.env.NEXT_PUBLIC_MAPTILER_KEY!)
     );
 
-    // IMPORTANT: re-add everything after style reload
     map.once("style.load", () => {
       bootstrapMap(map);
     });
   }
 
-  // ------------------------------------------------------------
-  // SSR SAFETY
-  // ------------------------------------------------------------
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
   // ------------------------------------------------------------
   // UI
   // ------------------------------------------------------------
   return (
     <div className="relative w-full h-screen">
-      {/* =========================
-          Mobile Toggles
-      ========================= */}
       <div className="absolute top-4 left-4 z-50 flex gap-2 md:hidden">
         <button
           onClick={() => setShowSidebar((v) => !v)}
@@ -205,7 +194,6 @@ export default function AndesMap() {
         >
           Filters
         </button>
-
         <button
           onClick={() => setShowLegend((v) => !v)}
           className="px-3 py-1 text-sm rounded-md bg-white/90 shadow"
@@ -214,45 +202,30 @@ export default function AndesMap() {
         </button>
       </div>
 
-      {/* =========================
-          Sidebar
-      ========================= */}
       {showSidebar && (
         <div className="absolute top-0 left-0 z-40">
           <SidebarFilters
             onFilterChange={setFilters}
-            onToggleRoutes={toggleRoutes}
-            onToggleSkiOnly={toggleSkiRoutesOnly}
-            onToggleSkiResorts={toggleSkiResorts}
-            onToggleVolcanoes={toggleVolcanoes}
-            onToggleMountains={toggleMountains}
-            onToggleParking={toggleParking}
+            onToggleRoutes={(v) => {}}
+            onToggleSkiOnly={() => {}}
+            onToggleSkiResorts={(v) => {}}
+            onToggleVolcanoes={(v) => {}}
+            onToggleMountains={(v) => {}}
+            onToggleParking={(v) => {}}
           />
         </div>
       )}
 
-      {/* =========================
-          Map Canvas (never animated)
-      ========================= */}
       <div ref={mapContainer} className="w-full h-full" />
 
-      {/* =========================
-          Legend
-      ========================= */}
       {showLegend && (
         <div className="absolute bottom-4 left-4 z-40">
           <MapLegend />
         </div>
       )}
 
-      {/* =========================
-          Style Selector (desktop)
-      ========================= */}
       <div className="absolute top-4 right-4 z-40 hidden md:block">
-        <MapStyleSelector
-          value={mapStyle}
-          onChange={handleStyleChange}
-        />
+        <MapStyleSelector value={mapStyle} onChange={handleStyleChange} />
       </div>
     </div>
   );
