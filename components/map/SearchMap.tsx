@@ -181,6 +181,10 @@ export default function MapSearch({ map }: Props) {
               ref={inputRef}
               value={query}
               onChange={(e) => runSearch(e.target.value)}
+               inputMode="search"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               placeholder="Search lakes, peaks, volcanoes, parks…"
               className="
                 w-full

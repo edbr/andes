@@ -118,6 +118,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
   }
 }
 
@@ -221,11 +222,15 @@
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
 
-  max-height: 85vh;
+  max-height: calc(100dvh - 96px); /* leaves space for grabber + header */
+  padding-bottom: env(safe-area-inset-bottom);
   overflow-y: auto;
   overscroll-behavior: contain;
-
+  -webkit-overflow-scrolling: touch;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(14px);
 

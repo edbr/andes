@@ -310,7 +310,7 @@ useEffect(() => {
   // UI
   // ------------------------------------------------------------
 return (
-  <div className="relative w-full h-dvh">
+  <div ref={mapContainer} className="relative w-full h-dvh">
     {/* Map UI stack */}
     <div className="absolute top-4 left-4 z-50 flex flex-col gap-3 pt-[env(safe-area-inset-top)]">
       <SidebarFilters
