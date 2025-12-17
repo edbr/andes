@@ -1,18 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { SlidersHorizontal, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { closeAllMapPanels } from "@/lib/mapUi";
 
 interface Props {
   onFilterChange: (filters: any) => void;
@@ -20,187 +14,217 @@ interface Props {
   onToggleSkiOnly: (skiOnly: boolean) => void;
   onToggleSkiResorts: (visible: boolean) => void;
   onToggleVolcanoes: (visible: boolean) => void;
-  onToggleMountains: (visible: boolean) => void; // ✅ NEW
-  onToggleParking: (visible: boolean) => void; // ✅ USED
-  
+  onToggleMountains: (visible: boolean) => void;
+  onToggleParking: (visible: boolean) => void;
+  onToggleProtectedAreas: (visible: boolean) => void;
 }
 
-export default function SidebarFilters({
-  onFilterChange,
-  onToggleRoutes,
-  onToggleSkiOnly,
-  onToggleSkiResorts,
-  onToggleVolcanoes,
-  onToggleMountains,
-  onToggleParking,
-}: Props) {
+export default function SidebarFilters(props: Props) {
+  const {
+    onFilterChange,
+    onToggleRoutes,
+    onToggleSkiOnly,
+    onToggleSkiResorts,
+    onToggleVolcanoes,
+    onToggleMountains,
+    onToggleParking,
+    onToggleProtectedAreas,
+  } = props;
+
+  const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef<number | null>(null);
+
   const [elevation, setElevation] = useState<[number, number]>([0, 6000]);
-  const [difficulty, setDifficulty] = useState<string | null>(null);
-  const [season, setSeason] = useState<string | null>(null);
 
-  const [routesVisible, setRoutesVisible] = useState(true);
-  const [skiOnly, setSkiOnly] = useState(false);
-  const [skiResortsVisible, setSkiResortsVisible] = useState(false);
-  const [volcanoesVisible, setVolcanoesVisible] = useState(false);
-  const [mountainsVisible, setMountainsVisible] = useState(false); // ✅ NEW
-  const [parkingVisible, setParkingVisible] = useState(false); // ✅ NEW
+  const [layers, setLayers] = useState({
+    routes: true,
+    skiResorts: false,
+    volcanoes: false,
+    mountains: false,
+    parking: false,
+    protectedAreas: false,
+  });
 
-  function updateFilters(partial: any) {
-    onFilterChange({
-      elevation,
-      difficulty,
-      season,
-      ...partial,
-    });
+  // ------------------------------------------------------------
+  // Close panel (idempotent + animated)
+  // ------------------------------------------------------------
+  function closePanel() {
+    if (!open || closing) return;
+
+    setClosing(true);
+    closeTimer.current = window.setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+      closeTimer.current = null;
+    }, 200);
+  }
+
+  // ------------------------------------------------------------
+  // External close signal (map click, other panels)
+  // ------------------------------------------------------------
+  useEffect(() => {
+    function handleGlobalClose() {
+      closePanel();
+    }
+
+    document.addEventListener("close-map-panels", handleGlobalClose);
+    return () => {
+      document.removeEventListener("close-map-panels", handleGlobalClose);
+    };
+  }, [open, closing]);
+
+  // ------------------------------------------------------------
+  // Layer toggle helper
+  // ------------------------------------------------------------
+  function toggleLayer<K extends keyof typeof layers>(
+    key: K,
+    value: boolean,
+    callback: (v: boolean) => void
+  ) {
+    setLayers((prev) => ({ ...prev, [key]: value }));
+    callback(value);
   }
 
   return (
-    <div className="absolute left-4 top-4 z-50 w-64">
-      <Card className="p-4 space-y-6 shadow-lg bg-white/90 backdrop-blur">
-        {/* Elevation */}
-        <div>
-          <Label className="text-sm font-medium">Elevation (m)</Label>
-          <Slider
-            min={0}
-            max={6000}
-            step={100}
-            value={elevation}
-            onValueChange={(v) => {
-              setElevation(v as [number, number]);
-              updateFilters({ elevation: v });
-            }}
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            {elevation[0]}m – {elevation[1]}m
-          </p>
-        </div>
+    <>
+      {/* ======================================================
+          FAB — ALWAYS VISIBLE
+      ====================================================== */}
+        <button
+        onClick={() => {
+        closeAllMapPanels();
+        setOpen(true);
+      }}
+        className="map-ui-fab"
+        aria-label="Open map filters"
+      >
+        <SlidersHorizontal className="w-5 h-5 text-gray-700" />
+      </button>
 
-        {/* Difficulty */}
-        <div>
-          <Label className="text-sm font-medium">Difficulty</Label>
-          <Select
-            onValueChange={(v) => {
-              setDifficulty(v);
-              updateFilters({ difficulty: v });
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Any difficulty" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="easy">Easy</SelectItem>
-                <SelectItem value="moderate">Moderate</SelectItem>
-                <SelectItem value="hard">Hard</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+      {/* ======================================================
+          BOTTOM SHEET
+      ====================================================== */}
+      {open && (
+        <div className="map-ui-sheet">
+          {/* Backdrop (allows map close, but not block FABs) */}
+          <div className="map-ui-backdrop" onClick={closePanel} />
 
-        {/* Season */}
-        <div>
-          <Label className="text-sm font-medium">Season</Label>
-          <Select
-            onValueChange={(v) => {
-              setSeason(v);
-              updateFilters({ season: v });
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Any season" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="winter">Winter</SelectItem>
-                <SelectItem value="spring">Spring</SelectItem>
-                <SelectItem value="summer">Summer</SelectItem>
-                <SelectItem value="fall">Fall</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+          {/* Panel */}
+          <div className={`map-ui-panel ${closing ? "closing" : ""}`}>
+            {/* Header */}
+            <div className="map-ui-header">
+              <div className="map-ui-grabber" />
+              <h3 className="map-ui-title">Filters</h3>
 
-        {/* Layers */}
-        <div className="pt-2 border-t space-y-4">
-          {/* Volcanoes */}
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Show Volcanoes</Label>
-            <Switch
-              checked={volcanoesVisible}
-              onCheckedChange={(checked) => {
-                setVolcanoesVisible(checked);
-                onToggleVolcanoes(checked);
-              }}
-            />
-          </div>
+              <button
+                onClick={closePanel}
+                className="map-ui-close-btn"
+                aria-label="Close filters"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-          {/* Ski Resorts */}
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Show Ski Resorts</Label>
-            <Switch
-              checked={skiResortsVisible}
-              onCheckedChange={(checked) => {
-                setSkiResortsVisible(checked);
-                onToggleSkiResorts(checked);
-              }}
-            />
-          </div>
+            <Card className="border-0 shadow-none p-0 space-y-2 bg-transparent">
+              {/* Elevation */}
+              <div className="map-ui-section">
+                <Label className="map-ui-section-label py-2">
+                  Elevation (m)
+                </Label>
 
-          {/* Mountains */}
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Show Mountains</Label>
-          <Switch
-            checked={mountainsVisible}
-            onCheckedChange={(checked) => {
-              setMountainsVisible(checked);
-              onToggleMountains(checked);
-            }}
-          />
-        </div>
+                <Slider
+                  min={0}
+                  max={6000}
+                  step={100}
+                  value={elevation}
+                  onValueChange={(v) => {
+                    setElevation(v as [number, number]);
+                    onFilterChange({ elevation: v });
+                  }}
+                />
 
-          {/* Parking */}
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Show Parking</Label>
-            <Switch
-              checked={parkingVisible}
-              onCheckedChange={(checked) => {
-                setParkingVisible(checked);
-                onToggleParking(checked);
-              }}
-            />
-          </div>
+                <p className="text-xs text-muted-foreground mt-1 py-2">
+                  {elevation[0]}m – {elevation[1]}m
+                </p>
+              </div>
 
-          {/* Routes */}
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Show Routes</Label>
-            <Switch
-              checked={routesVisible}
-              onCheckedChange={(checked) => {
-                setRoutesVisible(checked);
-                onToggleRoutes(checked);
+              {/* Layers */}
+              <div className="pt-2 border-t space-y-4">
+                <ToggleRow
+                  label="Protected Areas"
+                  checked={layers.protectedAreas}
+                  onChange={(v) =>
+                    toggleLayer("protectedAreas", v, onToggleProtectedAreas)
+                  }
+                />
 
-                if (!checked) {
-                  setSkiOnly(false);
-                  onToggleSkiOnly(false);
-                }
-              }}
-            />
-          </div>
+                <ToggleRow
+                  label="Volcanoes"
+                  checked={layers.volcanoes}
+                  onChange={(v) =>
+                    toggleLayer("volcanoes", v, onToggleVolcanoes)
+                  }
+                />
 
-          {/* Ski Routes Only */}
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Ski Routes Only</Label>
-            <Switch
-              checked={skiOnly}
-              disabled={!routesVisible}
-              onCheckedChange={(checked) => {
-                setSkiOnly(checked);
-                onToggleSkiOnly(checked);
-              }}
-            />
+                <ToggleRow
+                  label="Mountains"
+                  checked={layers.mountains}
+                  onChange={(v) =>
+                    toggleLayer("mountains", v, onToggleMountains)
+                  }
+                />
+
+                <ToggleRow
+                  label="Ski Resorts"
+                  checked={layers.skiResorts}
+                  onChange={(v) =>
+                    toggleLayer("skiResorts", v, onToggleSkiResorts)
+                  }
+                />
+
+                <ToggleRow
+                  label="Parking"
+                  checked={layers.parking}
+                  onChange={(v) =>
+                    toggleLayer("parking", v, onToggleParking)
+                  }
+                />
+
+                <ToggleRow
+                  label="Routes"
+                  checked={layers.routes}
+                  onChange={(v) => {
+                    toggleLayer("routes", v, onToggleRoutes);
+                    if (!v) onToggleSkiOnly(false);
+                  }}
+                />
+              </div>
+            </Card>
           </div>
         </div>
-      </Card>
+      )}
+    </>
+  );
+}
+
+/* --------------------------------
+   Toggle Row
+-------------------------------- */
+
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="map-ui-toggle-row">
+      <span>{label}</span>
+      <Switch checked={checked} onCheckedChange={onChange} />
     </div>
   );
 }

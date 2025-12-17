@@ -5,9 +5,9 @@ import maplibregl from "maplibre-gl";
    ROUTES + PROTECTED AREAS
 ============================================================ */
 export function addRouteLayers(map: maplibregl.Map) {
-  // ------------------------
-  // SOURCES
-  // ------------------------
+  /* ------------------------
+     SOURCES
+  ------------------------ */
   if (!map.getSource("osm-routes")) {
     map.addSource("osm-routes", {
       type: "vector",
@@ -22,9 +22,9 @@ export function addRouteLayers(map: maplibregl.Map) {
     });
   }
 
-  // ------------------------
-  // PROTECTED AREAS (BELOW ROUTES)
-  // ------------------------
+  /* ------------------------
+     PROTECTED AREAS (BELOW ROUTES)
+  ------------------------ */
   if (!map.getLayer("protected-areas-fill")) {
     map.addLayer({
       id: "protected-areas-fill",
@@ -64,34 +64,20 @@ export function addRouteLayers(map: maplibregl.Map) {
           "interpolate",
           ["linear"],
           ["zoom"],
-          6, 0.5,
-          10, 1.5,
+          6, 0.6,
+          10, 1.6,
         ],
         "line-opacity": 0.6,
       },
     });
   }
 
-  // ------------------------
-  // ROUTES
-  // ------------------------
+  /* ------------------------
+     ROUTES — CASING
+  ------------------------ */
   if (!map.getLayer("osm-routes-casing")) {
     map.addLayer({
       id: "osm-routes-casing",
-      type: "line",
-      source: "osm-routes",
-      "source-layer": "osm_routes_clean",
-      paint: {
-        "line-color": "rgba(0,0,0,0.35)",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.6, 11, 3.6],
-        "line-opacity": ["interpolate", ["linear"], ["zoom"], 6, 0.2, 11, 0.7],
-      },
-    });
-  }
-
-  if (!map.getLayer("osm-routes-line")) {
-    map.addLayer({
-      id: "osm-routes-line",
       type: "line",
       source: "osm-routes",
       "source-layer": "osm_routes_clean",
@@ -100,27 +86,53 @@ export function addRouteLayers(map: maplibregl.Map) {
         "line-join": "round",
       },
       paint: {
-        "line-color": [
-          "case",
-          [
-            "any",
-            ["==", ["get", "route"], "ski"],
-            ["==", ["get", "piste:type"], "skitour"],
-          ],
-          "#4FC3F7",
-          ["has", "sac_scale"],
-          "#5A5A5A",
-          [
-            "any",
-            ["==", ["get", "highway"], "footway"],
-            ["==", ["get", "highway"], "residential"],
-            ["==", ["get", "highway"], "service"],
-          ],
-          "#B0B8C0",
-          "#7A8CA0",
+        // subtle halo to improve contrast on snow / imagery
+        "line-color": "rgba(0,0,0,0.25)",
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          6, 1.2,
+          11, 4.5,
+          14, 6.5,
         ],
-        "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.4, 11, 2.8],
-        "line-opacity": ["case", ["has", "sac_scale"], 0.95, 0.5],
+        "line-opacity": 0.4,
+      },
+    });
+  }
+
+  /* ------------------------
+     ROUTES — MAIN LINE (DASHED)
+  ------------------------ */
+  if (!map.getLayer("osm-routes-line")) {
+    map.addLayer({
+      id: "osm-routes-line",
+      type: "line",
+      source: "osm-routes",
+      "source-layer": "osm_routes_clean",
+      minzoom: 9, // 👈 key line
+      layout: {
+        "line-cap": "square",
+        "line-join": "miter",
+      },
+      paint: {
+        // soft near-black
+        "line-color": "#0f172a",
+
+        // ✅ VALID: constant dash pattern
+        "line-dasharray": [4, 3],
+
+        // ✅ Zoom-scaled thickness
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          1, 0.04,
+          11, 1,
+          14, 1,
+        ],
+
+        "line-opacity": 1,
       },
     });
   }

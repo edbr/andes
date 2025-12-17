@@ -35,6 +35,7 @@ type LayerVisibilityState = {
   mountains: boolean;
   skiResorts: boolean;
   parking: boolean;
+  protectedAreas: boolean; // ✅ NEW
 };
 
 // ============================================================
@@ -65,6 +66,7 @@ export default function AndesMap() {
       mountains: false,
       skiResorts: false,
       parking: false,
+      protectedAreas: true,
     });
 
   const [selectedArea, setSelectedArea] =
@@ -132,6 +134,10 @@ export default function AndesMap() {
           </div>
         `)
         .addTo(map);
+    });
+
+    map.on("click", () => {
+    document.dispatchEvent(new Event("close-map-panels"));
     });
 
     map.on("mouseleave", "protected-areas-fill", () => {
@@ -202,6 +208,7 @@ export default function AndesMap() {
       updateMapLayerVisibility("mountain-points", false, "mountains");
       updateMapLayerVisibility("ski-resorts-points", false, "skiResorts");
       updateMapLayerVisibility("parking-points", false, "parking");
+      updateMapLayerVisibility("protected-areas-fill", false, "protectedAreas");
       defaultsAppliedRef.current = true;
     } else {
       // Reapply current state on style reload
@@ -211,6 +218,7 @@ export default function AndesMap() {
         mountains: "mountain-points",
         skiResorts: "ski-resorts-points",
         parking: "parking-points",
+        protectedAreas: "protected-areas-fill",
       };
 
       (Object.keys(layerVisibility) as (keyof LayerVisibilityState)[]).forEach(
@@ -274,71 +282,55 @@ export default function AndesMap() {
   // ------------------------------------------------------------
   // UI
   // ------------------------------------------------------------
-  return (
-    <div className="relative w-full h-screen">
-      {/* Mobile controls */}
-      <div className="absolute top-4 left-4 z-50 flex gap-2 md:hidden">
-        <button
-          onClick={() => setShowSidebar((v) => !v)}
-          className="px-3 py-1 text-sm rounded-md bg-white/90 shadow"
-        >
-          Filters
-        </button>
-        <button
-          onClick={() => setShowLegend((v) => !v)}
-          className="px-3 py-1 text-sm rounded-md bg-white/90 shadow"
-        >
-          Legend
-        </button>
-      </div>
+return (
+  <div className="relative w-full h-screen">
+    {/* Map UI stack */}
+    <div className="absolute top-4 left-4 z-50 flex flex-col gap-3">
+      <SidebarFilters
+  onFilterChange={setFilters}
 
-      {/* Sidebar */}
-      {showSidebar && (
-        <div className="absolute top-0 left-0 z-40">
-          <SidebarFilters
-            onFilterChange={setFilters}
-            onToggleRoutes={(v) =>
-              updateMapLayerVisibility("route-lines", v, "routes")
-            }
-            onToggleVolcanoes={(v) =>
-              updateMapLayerVisibility("volcano-points", v, "volcanoes")
-            }
-            onToggleMountains={(v) =>
-              updateMapLayerVisibility("mountain-points", v, "mountains")
-            }
-            onToggleSkiResorts={(v) =>
-              updateMapLayerVisibility("ski-resorts-points", v, "skiResorts")
-            }
-            onToggleParking={(v) =>
-              updateMapLayerVisibility("parking-points", v, "parking")
-            }
-            onToggleSkiOnly={() => {}}
-          />
-        </div>
-      )}
+  onToggleRoutes={(v: boolean) => {
+    updateMapLayerVisibility("osm-routes-line", v, "routes");
+    updateMapLayerVisibility("osm-routes-casing", v);
+  }}
 
-      {/* Map */}
-      <div ref={mapContainer} className="w-full h-full" />
+  onToggleVolcanoes={(v: boolean) =>
+    updateMapLayerVisibility("volcano-points", v, "volcanoes")
+  }
 
-      {/* Legend */}
-      {showLegend && (
-        <div className="absolute bottom-4 left-4 z-40">
-          <MapLegend />
-        </div>
-      )}
+  onToggleMountains={(v: boolean) =>
+    updateMapLayerVisibility("mountain-points", v, "mountains")
+  }
 
-      {/* Style selector */}
-      <div className="absolute top-4 right-4 z-40 hidden md:block">
-        <MapStyleSelector value={mapStyle} onChange={handleStyleChange} />
-      </div>
+  onToggleSkiResorts={(v: boolean) =>
+    updateMapLayerVisibility("ski-resorts-points", v, "skiResorts")
+  }
 
-      {/* Info panel */}
-      <ProtectedAreaPanel
-        area={selectedArea}
-        onClose={() => setSelectedArea(null)}
+  onToggleParking={(v: boolean) =>
+    updateMapLayerVisibility("parking-points", v, "parking")
+  }
+
+  onToggleProtectedAreas={(v: boolean) =>
+    updateMapLayerVisibility("protected-areas-fill", v, "protectedAreas")
+  }
+
+  onToggleSkiOnly={() => {}}
+/>
+
+
+      <MapLegend />
+
+      <MapStyleSelector
+        value={mapStyle}
+        onChange={handleStyleChange}
       />
     </div>
-  );
+
+    {/* Map */}
+    <div ref={mapContainer} className="w-full h-full" />
+  </div>
+);
+
 }
 
 // ============================================================

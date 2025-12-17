@@ -1,6 +1,9 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { Layers, X } from "lucide-react";
 import { MAP_STYLES, MapStyleKey } from "@/map/styles";
+import { closeAllMapPanels } from "@/lib/mapUi";
 
 interface Props {
   value: MapStyleKey;
@@ -8,19 +11,126 @@ interface Props {
 }
 
 export default function MapStyleSelector({ value, onChange }: Props) {
+  const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const closeTimeout = useRef<number | null>(null);
+
+  // ------------------------------------------------------------
+  // Close with animation (safe + idempotent)
+  // ------------------------------------------------------------
+  function close() {
+    if (closing || closeTimeout.current) return;
+
+    setClosing(true);
+    closeTimeout.current = window.setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+      closeTimeout.current = null;
+    }, 200);
+  }
+
+  // ------------------------------------------------------------
+  // Global close handler (map click, other panels)
+  // ------------------------------------------------------------
+  useEffect(() => {
+    function handleGlobalClose() {
+      if (open) close();
+    }
+
+    document.addEventListener("close-map-panels", handleGlobalClose);
+    return () => {
+      document.removeEventListener("close-map-panels", handleGlobalClose);
+    };
+  }, [open]);
+
+  // ------------------------------------------------------------
+  // ESC key support
+  // ------------------------------------------------------------
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && open) close();
+    }
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
-    <div className="absolute top-4 right-4 z-50 bg-white/90 backdrop-blur rounded-md shadow px-2 py-1">
-      <select
-        className="text-sm border rounded px-2 py-1"
-        value={value}
-        onChange={(e) => onChange(e.target.value as MapStyleKey)}
+    <>
+      {/* ======================================================
+          FAB — ALWAYS VISIBLE
+      ====================================================== */}
+      <button
+        onClick={() => {
+          if (closing) return;
+
+          if (open) {
+            close();
+          } else {
+            closeAllMapPanels();
+            setOpen(true);
+          }
+        }}
+        className="map-ui-fab"
+        aria-label="Change map style"
       >
-        {Object.entries(MAP_STYLES).map(([key, s]) => (
-          <option key={key} value={key}>
-            {s.label}
-          </option>
-        ))}
-      </select>
-    </div>
+        <Layers className="w-5 h-5 text-gray-700" />
+      </button>
+
+      {/* ======================================================
+          BOTTOM SHEET
+      ====================================================== */}
+      {open && (
+        <div className="map-ui-sheet">
+          {/* Backdrop (does NOT block map interaction) */}
+          <div
+            className="map-ui-backdrop"
+            onClick={close}
+          />
+
+          {/* Panel */}
+          <div className={`map-ui-panel ${closing ? "closing" : ""}`}>
+            <div className="map-ui-header">
+              <div className="map-ui-grabber" />
+
+              <h3 className="map-ui-title">Map Style</h3>
+
+              <button
+                onClick={close}
+                className="map-ui-close-btn"
+                aria-label="Close map style"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <select
+              className="
+                w-full
+                text-sm
+                border
+                rounded-md
+                px-3
+                py-2
+                bg-white
+                focus:outline-none
+                focus:ring-1
+                focus:ring-slate-300
+              "
+              value={value}
+              onChange={(e) =>
+                onChange(e.target.value as MapStyleKey)
+              }
+            >
+              {Object.entries(MAP_STYLES).map(([key, s]) => (
+                <option key={key} value={key}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
