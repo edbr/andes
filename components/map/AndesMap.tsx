@@ -7,6 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import SidebarFilters from "@/components/map/SidebarFilters";
 import MapLegend from "@/components/map/MapLegend";
 import MapStyleSelector from "@/components/map/MapStyleSelector";
+import SearchMap from "@/components/map/SearchMap";
 
 import { registerPMTiles } from "@/map/protocol";
 import { loadIcons } from "@/map/icons";
@@ -342,6 +343,8 @@ return (
 
   onToggleSkiOnly={() => {}}
 />
+
+<SearchMap map={mapRef.current ?? undefined} />
 
 
       <MapLegend />
