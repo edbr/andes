@@ -57,6 +57,7 @@ export default function MapSearch({ map }: Props) {
     return `&viewbox=${b.getWest()},${b.getNorth()},${b.getEast()},${b.getSouth()}&bounded=1`;
   }
 
+  
   function openDirections(place: SearchResult) {
     window.open(
       `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}`,

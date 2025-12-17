@@ -34,6 +34,14 @@ type LayerVisibilityState = {
 };
 
 /* ============================================================
+   CONSTANTS
+============================================================ */
+const ANDES_BOUNDS: [[number, number], [number, number]] = [
+  [-78, -48],
+  [-62, -27],
+];
+
+/* ============================================================
    ANDES MAP
 ============================================================ */
 export default function AndesMap() {
@@ -47,6 +55,7 @@ export default function AndesMap() {
   ------------------------ */
   const [mounted, setMounted] = useState(false);
   const [mapStyle, setMapStyle] = useState<MapStyleKey>("topo");
+  const [is3D, setIs3D] = useState(false);
 
   const [filters, setFilters] = useState({
     elevation: [0, 6000] as [number, number],
@@ -59,10 +68,22 @@ export default function AndesMap() {
       mountains: false,
       skiResorts: false,
       parking: false,
-      protectedAreas: false,
+      protectedAreas: true,
     });
 
   useEffect(() => setMounted(true), []);
+
+  /* ------------------------
+     CAMERA HELPERS
+  ------------------------ */
+  function applyCameraMode(map: maplibregl.Map, enable3D: boolean) {
+    map.easeTo({
+      pitch: enable3D ? 65 : 0,
+      bearing: enable3D ? 10 : 0,
+      duration: 800,
+      essential: true,
+    });
+  }
 
   /* ------------------------
      HELPERS
@@ -172,30 +193,14 @@ export default function AndesMap() {
       updateMapLayerVisibility("mountain-points", false, "mountains");
       updateMapLayerVisibility("ski-resorts-points", false, "skiResorts");
       updateMapLayerVisibility("parking-points", false, "parking");
-      updateMapLayerVisibility("protected-areas-fill", false,
+      updateMapLayerVisibility(
+        "protected-areas-fill",
+        false,
         "protectedAreas"
       );
       defaultsAppliedRef.current = true;
-    } else {
-      const mapping: Record<keyof LayerVisibilityState, string[]> = {
-        routes: ["osm-routes-line", "osm-routes-casing"],
-        volcanoes: ["volcano-points"],
-        mountains: ["mountain-points"],
-        skiResorts: ["ski-resorts-points"],
-        parking: ["parking-points"],
-        protectedAreas: ["protected-areas-fill"],
-      };
-
-      (Object.keys(layerVisibility) as (keyof LayerVisibilityState)[]).forEach(
-        (key) => {
-          mapping[key].forEach((layerId) =>
-            updateMapLayerVisibility(layerId, layerVisibility[key])
-          );
-        }
-      );
     }
 
-    // iOS / Chrome stability
     requestAnimationFrame(() => map.resize());
     setTimeout(() => map.resize(), 100);
   }
@@ -205,6 +210,7 @@ export default function AndesMap() {
   ------------------------ */
   useEffect(() => {
     if (!mounted || !mapContainerRef.current) return;
+    if (mapRef.current) return;
 
     registerPMTiles();
 
@@ -215,22 +221,25 @@ export default function AndesMap() {
       ),
       center: [-71, -38],
       zoom: 5.2,
-      pitch: 55,
-      bearing: 10,
+      pitch: 0,
+      bearing: 0,
       minZoom: 4,
       maxZoom: 14,
-      maxBounds: [
-        [-78, -48],
-        [-62, -27],
-      ],
+      maxBounds: ANDES_BOUNDS,
     });
 
     mapRef.current = map;
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
-    map.on("load", () => bootstrapMap(map));
+    map.once("load", () => {
+      bootstrapMap(map);
+      applyCameraMode(map, is3D);
+    });
 
-    return () => map.remove();
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
   }, [mounted]);
 
   /* ------------------------
@@ -241,11 +250,16 @@ export default function AndesMap() {
     if (!map) return;
 
     setMapStyle(style);
+    defaultsAppliedRef.current = false;
+
     map.setStyle(
       MAP_STYLES[style].url(process.env.NEXT_PUBLIC_MAPTILER_KEY!)
     );
 
-    map.once("style.load", () => bootstrapMap(map));
+    map.once("style.load", () => {
+      bootstrapMap(map);
+      applyCameraMode(map, is3D);
+    });
   }
 
   if (!mounted) return null;
@@ -254,48 +268,66 @@ export default function AndesMap() {
      RENDER
   ------------------------ */
   return (
-  <div
-    className="fixed inset-0 w-full overflow-hidden"
-    style={{ height: "100dvh" }}
-  >
-    {/* MAP CONTAINER — MUST BE A REAL BOX */}
     <div
-      ref={mapContainerRef}
-      className="absolute inset-0"
-      style={{ height: "100%", width: "100%" }}
-    />
-
-    {/* UI STACK */}
-    <div className="absolute top-4 left-4 z-50 flex flex-col gap-3 pt-[env(safe-area-inset-top)]">
-      <SidebarFilters
-        onFilterChange={setFilters}
-        onToggleRoutes={(v) => {
-          updateMapLayerVisibility("osm-routes-line", v, "routes");
-          updateMapLayerVisibility("osm-routes-casing", v);
-        }}
-        onToggleVolcanoes={(v) =>
-          updateMapLayerVisibility("volcano-points", v, "volcanoes")
-        }
-        onToggleMountains={(v) =>
-          updateMapLayerVisibility("mountain-points", v, "mountains")
-        }
-        onToggleSkiResorts={(v) =>
-          updateMapLayerVisibility("ski-resorts-points", v, "skiResorts")
-        }
-        onToggleParking={(v) =>
-          updateMapLayerVisibility("parking-points", v, "parking")
-        }
-        onToggleProtectedAreas={(v) =>
-          updateMapLayerVisibility(
-            "protected-areas-fill", v,"protectedAreas")
-        }
-        onToggleSkiOnly={() => {}}
+      className="fixed inset-0 w-full overflow-hidden"
+      style={{ height: "100dvh" }}
+    >
+      {/* MAP CONTAINER */}
+      <div
+        ref={mapContainerRef}
+        className="absolute inset-0"
+        style={{ height: "100%", width: "100%" }}
       />
 
-      <SearchMap map={mapRef.current ?? undefined} />
-      <MapLegend />
-      <MapStyleSelector value={mapStyle} onChange={handleStyleChange} />
+      {/* UI STACK */}
+      <div className="absolute top-4 left-4 z-50 flex flex-col gap-3 pt-[env(safe-area-inset-top)]">
+        <SidebarFilters
+          onFilterChange={setFilters}
+          onToggleRoutes={(v) => {
+            updateMapLayerVisibility("osm-routes-line", v, "routes");
+            updateMapLayerVisibility("osm-routes-casing", v);
+          }}
+          onToggleVolcanoes={(v) =>
+            updateMapLayerVisibility("volcano-points", v, "volcanoes")
+          }
+          onToggleMountains={(v) =>
+            updateMapLayerVisibility("mountain-points", v, "mountains")
+          }
+          onToggleSkiResorts={(v) =>
+            updateMapLayerVisibility("ski-resorts-points", v, "skiResorts")
+          }
+          onToggleParking={(v) =>
+            updateMapLayerVisibility("parking-points", v, "parking")
+          }
+          onToggleProtectedAreas={(v) =>
+            updateMapLayerVisibility(
+              "protected-areas-fill",
+              v,
+              "protectedAreas"
+            )
+          }
+          onToggleSkiOnly={() => {}}
+        />
+
+        <button
+          onClick={() => {
+            const map = mapRef.current;
+            if (!map) return;
+
+            const next = !is3D;
+            setIs3D(next);
+            applyCameraMode(map, next);
+          }}
+          className="map-ui-fab"
+          title={is3D ? "Switch to 2D" : "Switch to 3D"}
+        >
+          {is3D ? "2D" : "3D"}
+        </button>
+
+        <SearchMap map={mapRef.current ?? undefined} />
+        <MapLegend />
+        <MapStyleSelector value={mapStyle} onChange={handleStyleChange} />
+      </div>
     </div>
-  </div>
-);
+  );
 }
