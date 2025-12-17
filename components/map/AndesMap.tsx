@@ -49,6 +49,7 @@ export default function AndesMap() {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const defaultsAppliedRef = useRef(false);
+  const parkingHandlersBoundRef = useRef(false);
 
   /* ------------------------
      STATE
@@ -78,7 +79,7 @@ export default function AndesMap() {
   ------------------------ */
   function applyCameraMode(map: maplibregl.Map, enable3D: boolean) {
     map.easeTo({
-      pitch: enable3D ? 65 : 0,
+      pitch: enable3D ? 55 : 0,
       bearing: enable3D ? 10 : 0,
       duration: 800,
       essential: true,
@@ -186,6 +187,37 @@ export default function AndesMap() {
     setupTooltips(map);
     applyVolcanoFilters();
 
+    /* ------------------------
+       Parking → Google Maps directions
+    ------------------------ */
+    if (!parkingHandlersBoundRef.current) {
+      parkingHandlersBoundRef.current = true;
+
+      map.on("click", "parking-points", (e) => {
+        const feature = e.features?.[0];
+        if (!feature || feature.geometry.type !== "Point") return;
+
+        const [lng, lat] = feature.geometry.coordinates as [number, number];
+
+        const isMobile =
+          /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        const url = isMobile
+          ? `https://maps.google.com/?daddr=${lat},${lng}`
+          : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+        window.open(url, "_blank", "noopener,noreferrer");
+      });
+
+      map.on("mouseenter", "parking-points", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+
+      map.on("mouseleave", "parking-points", () => {
+        map.getCanvas().style.cursor = "";
+      });
+    }
+
     if (!defaultsAppliedRef.current) {
       updateMapLayerVisibility("osm-routes-line", true, "routes");
       updateMapLayerVisibility("osm-routes-casing", true);
@@ -239,6 +271,8 @@ export default function AndesMap() {
     return () => {
       map.remove();
       mapRef.current = null;
+      parkingHandlersBoundRef.current = false;
+      defaultsAppliedRef.current = false;
     };
   }, [mounted]);
 
@@ -251,6 +285,7 @@ export default function AndesMap() {
 
     setMapStyle(style);
     defaultsAppliedRef.current = false;
+    parkingHandlersBoundRef.current = false;
 
     map.setStyle(
       MAP_STYLES[style].url(process.env.NEXT_PUBLIC_MAPTILER_KEY!)
