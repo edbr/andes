@@ -205,14 +205,14 @@
   position: fixed;
   inset: 0;
   z-index: 60;
-  pointer-events: none; /* map stays interactive */
+  pointer-events: auto; /* map stays interactive */
 }
 
 .map-ui-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.04);
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 /* ------------------------------------------------------------ */
@@ -222,14 +222,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  width: 100%;
+  width: auto;
   max-width: 100vw;
   box-sizing: border-box;
 
-  max-height: calc(100dvh - 96px); /* leaves space for grabber + header */
-  padding-bottom: env(safe-area-inset-bottom);
+  max-height: calc(100vh - env(safe-area-inset-top) - 72px); /* leaves space for grabber + header */
   overflow-y: auto;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(14px);

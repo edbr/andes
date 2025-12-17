@@ -21,44 +21,36 @@ import { MAP_STYLES, type MapStyleKey } from "@/map/styles";
 
 import type { FilterSpecification } from "maplibre-gl";
 
-// ============================================================
-// TYPES
-// ============================================================
-type SelectedProtectedArea = {
-  id: string;
-  name: string;
-  category: string;
-};
-
+/* ============================================================
+   TYPES
+============================================================ */
 type LayerVisibilityState = {
   routes: boolean;
   volcanoes: boolean;
   mountains: boolean;
   skiResorts: boolean;
   parking: boolean;
-  protectedAreas: boolean; // ✅ NEW
+  protectedAreas: boolean;
 };
 
-// ============================================================
-// ANDES MAP
-// ============================================================
+/* ============================================================
+   ANDES MAP
+============================================================ */
 export default function AndesMap() {
-  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const defaultsAppliedRef = useRef(false);
 
-  // ------------------------------------------------------------
-  // STATE
-  // ------------------------------------------------------------
+  /* ------------------------
+     STATE
+  ------------------------ */
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [mapStyle, setMapStyle] = useState<MapStyleKey>("topo");
 
   const [filters, setFilters] = useState({
     elevation: [0, 6000] as [number, number],
   });
-
-  const [mapStyle, setMapStyle] = useState<MapStyleKey>("topo");
 
   const [layerVisibility, setLayerVisibility] =
     useState<LayerVisibilityState>({
@@ -67,22 +59,14 @@ export default function AndesMap() {
       mountains: false,
       skiResorts: false,
       parking: false,
-      protectedAreas: true,
+      protectedAreas: false,
     });
 
-  const [selectedArea, setSelectedArea] =
-    useState<SelectedProtectedArea | null>(null);
+  useEffect(() => setMounted(true), []);
 
-  const isMobile =
-    typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 768px)").matches;
-
-  const [showSidebar, setShowSidebar] = useState(!isMobile);
-  const [showLegend, setShowLegend] = useState(!isMobile);
-
-  // ------------------------------------------------------------
-  // HELPERS
-  // ------------------------------------------------------------
+  /* ------------------------
+     HELPERS
+  ------------------------ */
   function updateMapLayerVisibility(
     layerId: string,
     visible: boolean,
@@ -102,9 +86,9 @@ export default function AndesMap() {
     }
   }
 
-  // ------------------------------------------------------------
-  // TOOLTIP + CLICK INTERACTIONS
-  // ------------------------------------------------------------
+  /* ------------------------
+     TOOLTIP
+  ------------------------ */
   function setupTooltips(map: maplibregl.Map) {
     if (!popupRef.current) {
       popupRef.current = new maplibregl.Popup({
@@ -128,17 +112,13 @@ export default function AndesMap() {
 
       popupRef.current
         .setLngLat(e.lngLat)
-        .setHTML(`
-          <div class="andes-tooltip tooltip">
-            <div class="tooltip-title">${name}</div>
-            <div class="tooltip-sub">${category}</div>
-          </div>
-        `)
+        .setHTML(
+          `<div>
+             <div style="font-weight:600">${name}</div>
+             <div style="font-size:11px;opacity:.7">${category}</div>
+           </div>`
+        )
         .addTo(map);
-    });
-
-    map.on("click", () => {
-    document.dispatchEvent(new Event("close-map-panels"));
     });
 
     map.on("mouseleave", "protected-areas-fill", () => {
@@ -146,31 +126,14 @@ export default function AndesMap() {
       popupRef.current?.remove();
     });
 
-    map.on("click", "protected-areas-fill", (e) => {
-      const feature = e.features?.[0];
-      if (!feature) return;
-
-      setSelectedArea({
-        id: feature.id?.toString() ?? crypto.randomUUID(),
-        name: feature.properties?.name ?? "Unnamed Area",
-        category: feature.properties?.category ?? "unknown",
-      });
-    });
-
-    map.on("click", (e) => {
-      const features = map.queryRenderedFeatures(e.point, {
-        layers: ["protected-areas-fill"],
-      });
-
-      if (!features.length) {
-        setSelectedArea(null);
-      }
+    map.on("click", () => {
+      document.dispatchEvent(new Event("close-map-panels"));
     });
   }
 
-  // ------------------------------------------------------------
-  // FILTERS
-  // ------------------------------------------------------------
+  /* ------------------------
+     FILTERS
+  ------------------------ */
   function applyVolcanoFilters() {
     const map = mapRef.current;
     if (!map?.getLayer("volcano-points")) return;
@@ -188,35 +151,9 @@ export default function AndesMap() {
     applyVolcanoFilters();
   }, [filters]);
 
-  // ------------------------------------------------------------
-  // MAPLIBRE RE-MEASURE AFTER LOAD
-  // ------------------------------------------------------------
-useEffect(() => {
-  if (!mapRef.current) return;
-
-  const map = mapRef.current;
-
-  const resize = () => {
-    map.resize();
-  };
-
-  // Initial fix
-  requestAnimationFrame(resize);
-
-  // Orientation changes
-  window.addEventListener("orientationchange", resize);
-  window.addEventListener("resize", resize);
-
-  return () => {
-    window.removeEventListener("orientationchange", resize);
-    window.removeEventListener("resize", resize);
-  };
-}, []);
-
-
-  // ------------------------------------------------------------
-  // BOOTSTRAP MAP CONTENT
-  // ------------------------------------------------------------
+  /* ------------------------
+     MAP BOOTSTRAP
+  ------------------------ */
   async function bootstrapMap(map: maplibregl.Map) {
     await loadIcons(map);
 
@@ -228,44 +165,51 @@ useEffect(() => {
     setupTooltips(map);
     applyVolcanoFilters();
 
-    // Apply defaults ONCE
     if (!defaultsAppliedRef.current) {
-      updateMapLayerVisibility("route-lines", true, "routes");
+      updateMapLayerVisibility("osm-routes-line", true, "routes");
+      updateMapLayerVisibility("osm-routes-casing", true);
       updateMapLayerVisibility("volcano-points", false, "volcanoes");
       updateMapLayerVisibility("mountain-points", false, "mountains");
       updateMapLayerVisibility("ski-resorts-points", false, "skiResorts");
       updateMapLayerVisibility("parking-points", false, "parking");
-      updateMapLayerVisibility("protected-areas-fill", false, "protectedAreas");
+      updateMapLayerVisibility("protected-areas-fill", false,
+        "protectedAreas"
+      );
       defaultsAppliedRef.current = true;
     } else {
-      // Reapply current state on style reload
-      const mapping: Record<keyof LayerVisibilityState, string> = {
-        routes: "route-lines",
-        volcanoes: "volcano-points",
-        mountains: "mountain-points",
-        skiResorts: "ski-resorts-points",
-        parking: "parking-points",
-        protectedAreas: "protected-areas-fill",
+      const mapping: Record<keyof LayerVisibilityState, string[]> = {
+        routes: ["osm-routes-line", "osm-routes-casing"],
+        volcanoes: ["volcano-points"],
+        mountains: ["mountain-points"],
+        skiResorts: ["ski-resorts-points"],
+        parking: ["parking-points"],
+        protectedAreas: ["protected-areas-fill"],
       };
 
       (Object.keys(layerVisibility) as (keyof LayerVisibilityState)[]).forEach(
         (key) => {
-          updateMapLayerVisibility(mapping[key], layerVisibility[key]);
+          mapping[key].forEach((layerId) =>
+            updateMapLayerVisibility(layerId, layerVisibility[key])
+          );
         }
       );
     }
+
+    // iOS / Chrome stability
+    requestAnimationFrame(() => map.resize());
+    setTimeout(() => map.resize(), 100);
   }
 
-  // ------------------------------------------------------------
-  // MAP INIT
-  // ------------------------------------------------------------
+  /* ------------------------
+     MAP INIT
+  ------------------------ */
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || !mapContainerRef.current) return;
 
     registerPMTiles();
 
     const map = new maplibregl.Map({
-      container: mapContainer.current!,
+      container: mapContainerRef.current,
       style: MAP_STYLES[mapStyle].url(
         process.env.NEXT_PUBLIC_MAPTILER_KEY!
       ),
@@ -289,9 +233,9 @@ useEffect(() => {
     return () => map.remove();
   }, [mounted]);
 
-  // ------------------------------------------------------------
-  // STYLE SWITCHING
-  // ------------------------------------------------------------
+  /* ------------------------
+     STYLE SWITCH
+  ------------------------ */
   function handleStyleChange(style: MapStyleKey) {
     const map = mapRef.current;
     if (!map) return;
@@ -306,87 +250,52 @@ useEffect(() => {
 
   if (!mounted) return null;
 
-  // ------------------------------------------------------------
-  // UI
-  // ------------------------------------------------------------
-return (
-  <div ref={mapContainer} className="relative w-full h-dvh">
-    {/* Map UI stack */}
+  /* ------------------------
+     RENDER
+  ------------------------ */
+  return (
+  <div
+    className="fixed inset-0 w-full overflow-hidden"
+    style={{ height: "100dvh" }}
+  >
+    {/* MAP CONTAINER — MUST BE A REAL BOX */}
+    <div
+      ref={mapContainerRef}
+      className="absolute inset-0"
+      style={{ height: "100%", width: "100%" }}
+    />
+
+    {/* UI STACK */}
     <div className="absolute top-4 left-4 z-50 flex flex-col gap-3 pt-[env(safe-area-inset-top)]">
       <SidebarFilters
-  onFilterChange={setFilters}
-
-  onToggleRoutes={(v: boolean) => {
-    updateMapLayerVisibility("osm-routes-line", v, "routes");
-    updateMapLayerVisibility("osm-routes-casing", v);
-  }}
-
-  onToggleVolcanoes={(v: boolean) =>
-    updateMapLayerVisibility("volcano-points", v, "volcanoes")
-  }
-
-  onToggleMountains={(v: boolean) =>
-    updateMapLayerVisibility("mountain-points", v, "mountains")
-  }
-
-  onToggleSkiResorts={(v: boolean) =>
-    updateMapLayerVisibility("ski-resorts-points", v, "skiResorts")
-  }
-
-  onToggleParking={(v: boolean) =>
-    updateMapLayerVisibility("parking-points", v, "parking")
-  }
-
-  onToggleProtectedAreas={(v: boolean) =>
-    updateMapLayerVisibility("protected-areas-fill", v, "protectedAreas")
-  }
-
-  onToggleSkiOnly={() => {}}
-/>
-
-<SearchMap map={mapRef.current ?? undefined} />
-
-
-      <MapLegend />
-
-      <MapStyleSelector
-        value={mapStyle}
-        onChange={handleStyleChange}
+        onFilterChange={setFilters}
+        onToggleRoutes={(v) => {
+          updateMapLayerVisibility("osm-routes-line", v, "routes");
+          updateMapLayerVisibility("osm-routes-casing", v);
+        }}
+        onToggleVolcanoes={(v) =>
+          updateMapLayerVisibility("volcano-points", v, "volcanoes")
+        }
+        onToggleMountains={(v) =>
+          updateMapLayerVisibility("mountain-points", v, "mountains")
+        }
+        onToggleSkiResorts={(v) =>
+          updateMapLayerVisibility("ski-resorts-points", v, "skiResorts")
+        }
+        onToggleParking={(v) =>
+          updateMapLayerVisibility("parking-points", v, "parking")
+        }
+        onToggleProtectedAreas={(v) =>
+          updateMapLayerVisibility(
+            "protected-areas-fill", v,"protectedAreas")
+        }
+        onToggleSkiOnly={() => {}}
       />
-    </div>
 
-    {/* Map */}
-    <div ref={mapContainer} className="w-full h-full" />
+      <SearchMap map={mapRef.current ?? undefined} />
+      <MapLegend />
+      <MapStyleSelector value={mapStyle} onChange={handleStyleChange} />
+    </div>
   </div>
 );
-
-}
-
-// ============================================================
-// INFO PANEL
-// ============================================================
-function ProtectedAreaPanel({
-  area,
-  onClose,
-}: {
-  area: SelectedProtectedArea | null;
-  onClose: () => void;
-}) {
-  if (!area) return null;
-
-  return (
-    <aside className="absolute top-0 right-0 z-40 h-full w-80 bg-white border-l shadow-lg p-4 overflow-y-auto">
-      <button
-        onClick={onClose}
-        className="mb-4 text-sm text-slate-600 hover:text-slate-900"
-      >
-        Close
-      </button>
-
-      <h2 className="text-lg font-semibold">{area.name}</h2>
-      <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">
-        {area.category}
-      </p>
-    </aside>
-  );
 }
