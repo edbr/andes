@@ -188,6 +188,32 @@ export default function AndesMap() {
   }, [filters]);
 
   // ------------------------------------------------------------
+  // MAPLIBRE RE-MEASURE AFTER LOAD
+  // ------------------------------------------------------------
+useEffect(() => {
+  if (!mapRef.current) return;
+
+  const map = mapRef.current;
+
+  const resize = () => {
+    map.resize();
+  };
+
+  // Initial fix
+  requestAnimationFrame(resize);
+
+  // Orientation changes
+  window.addEventListener("orientationchange", resize);
+  window.addEventListener("resize", resize);
+
+  return () => {
+    window.removeEventListener("orientationchange", resize);
+    window.removeEventListener("resize", resize);
+  };
+}, []);
+
+
+  // ------------------------------------------------------------
   // BOOTSTRAP MAP CONTENT
   // ------------------------------------------------------------
   async function bootstrapMap(map: maplibregl.Map) {
@@ -283,9 +309,9 @@ export default function AndesMap() {
   // UI
   // ------------------------------------------------------------
 return (
-  <div className="relative w-full h-screen">
+  <div className="relative w-full h-dvh">
     {/* Map UI stack */}
-    <div className="absolute top-4 left-4 z-50 flex flex-col gap-3">
+    <div className="absolute top-4 left-4 z-50 flex flex-col gap-3 pt-[env(safe-area-inset-top)]">
       <SidebarFilters
   onFilterChange={setFilters}
 
