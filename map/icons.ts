@@ -3,7 +3,7 @@ import maplibregl from "maplibre-gl";
 
 /**
  * Marker icons (PNG)
- * These are rendered INSIDE MapLibre (canvas)
+ * Rendered INSIDE MapLibre (canvas)
  * Sizes exported: 32 / 48 / 64 → we standardize on 48
  */
 const MARKER_ICONS = [
@@ -12,6 +12,24 @@ const MARKER_ICONS = [
   { id: "marker-resort", url: "/icons/markers/marker-resort-48.png" },
   { id: "marker-route", url: "/icons/markers/marker-route-48.png" },
   { id: "marker-volcano", url: "/icons/markers/marker-volcano-48.png" },
+
+  // Protected areas
+  {
+    id: "marker-protected-national",
+    url: "/icons/markers/marker-protected-national-48.png",
+  },
+  {
+    id: "marker-protected-regional",
+    url: "/icons/markers/marker-protected-regional-48.png",
+  },
+  {
+    id: "marker-protected-reserve",
+    url: "/icons/markers/marker-protected-reserve-48.png",
+  },
+  {
+    id: "marker-protected-default",
+    url: "/icons/markers/marker-protected-48.png",
+  },
 ] as const;
 
 /**

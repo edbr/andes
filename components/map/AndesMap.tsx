@@ -174,6 +174,48 @@ export default function AndesMap() {
   }, [filters]);
 
   /* ------------------------
+     ski resort tooltip
+  ------------------------ */
+  function setupSkiResortTooltips(map: maplibregl.Map) {
+  const popup = new maplibregl.Popup({
+    closeButton: false,
+    closeOnClick: false,
+    offset: 12,
+    className: "andes-tooltip",
+  });
+
+  map.on("mouseenter", "ski-resorts-points", (e) => {
+    map.getCanvas().style.cursor = "pointer";
+
+    const feature = e.features?.[0];
+    if (!feature) return;
+
+    const name = feature.properties?.name ?? "Ski Resort";
+    const country = feature.properties?.country;
+
+    popup
+      .setLngLat(e.lngLat)
+      .setHTML(
+        `<div>
+          <div style="font-weight:600">${name}</div>
+          ${
+            country
+              ? `<div style="font-size:11px;opacity:.7">${country}</div>`
+              : ""
+          }
+        </div>`
+      )
+      .addTo(map);
+  });
+
+  map.on("mouseleave", "ski-resorts-points", () => {
+    map.getCanvas().style.cursor = "";
+    popup.remove();
+  });
+}
+
+
+  /* ------------------------
      MAP BOOTSTRAP
   ------------------------ */
   async function bootstrapMap(map: maplibregl.Map) {
@@ -184,6 +226,7 @@ export default function AndesMap() {
     addParkingLayers(map);
     addSkiResortLayers(map);
 
+    setupSkiResortTooltips(map); 
     setupTooltips(map);
     applyVolcanoFilters();
 
@@ -334,13 +377,12 @@ export default function AndesMap() {
           onToggleParking={(v) =>
             updateMapLayerVisibility("parking-points", v, "parking")
           }
-          onToggleProtectedAreas={(v) =>
-            updateMapLayerVisibility(
-              "protected-areas-fill",
-              v,
-              "protectedAreas"
-            )
-          }
+          onToggleProtectedAreas={(v) => {
+          updateMapLayerVisibility("protected-areas-fill", v, "protectedAreas");
+          updateMapLayerVisibility("protected-areas-outline", v);
+          updateMapLayerVisibility("protected-areas-icons", v);
+          updateMapLayerVisibility("protected-areas-labels", v);
+        }}
           onToggleSkiOnly={() => {}}
         />
 
