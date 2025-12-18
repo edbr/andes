@@ -255,8 +255,8 @@ export default function AndesMap() {
       zoom: 5.2,
       pitch: 0,
       bearing: 0,
-      minZoom: 4,
-      maxZoom: 14,
+      minZoom: 6,
+      maxZoom: 20,
       maxBounds: ANDES_BOUNDS,
     });
 

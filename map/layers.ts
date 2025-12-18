@@ -139,6 +139,9 @@ export function addMountainVolcanoLayers(map: maplibregl.Map) {
     map.addSource("mountain-volcano", {
       type: "geojson",
       data: "/data/mountain-volcano-clean.geojson",
+      cluster: true,
+      clusterMaxZoom: 15,
+      clusterRadius: 50,
     });
   }
 
@@ -150,7 +153,7 @@ export function addMountainVolcanoLayers(map: maplibregl.Map) {
       filter: ["==", ["get", "natural"], "volcano"],
       layout: {
         "icon-image": "marker-volcano",
-        "icon-size": 1,
+        "icon-size": 1.6,
         "icon-anchor": "bottom",
         "icon-allow-overlap": true,
       },
@@ -165,18 +168,9 @@ export function addMountainVolcanoLayers(map: maplibregl.Map) {
       filter: ["==", ["get", "natural"], "peak"],
       layout: {
         "icon-image": "marker-mountain",
-        "icon-size": 1,
+        "icon-size": 1.6,
         "icon-anchor": "bottom",
         "icon-allow-overlap": true,
-      },
-      paint: {
-        "icon-opacity": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          6, 0,
-          8, 1,
-        ],
       },
     });
   }
@@ -191,8 +185,8 @@ export function addParkingLayers(map: maplibregl.Map) {
       type: "geojson",
       data: "/data/parking_points.geojson",
       cluster: true,
-      clusterMaxZoom: 11,
-      clusterRadius: 50,
+      clusterMaxZoom: 8,
+      clusterRadius: 30,
     });
   }
 
@@ -204,7 +198,7 @@ export function addParkingLayers(map: maplibregl.Map) {
       filter: ["!", ["has", "point_count"]],
       layout: {
         "icon-image": "marker-parking",
-        "icon-size": 1,
+        "icon-size": 1.4,
         "icon-allow-overlap": true,
       },
     });
@@ -229,7 +223,7 @@ export function addSkiResortLayers(map: maplibregl.Map) {
       source: "ski-resorts",
       layout: {
         "icon-image": "marker-resort",
-        "icon-size": 1,
+        "icon-size": 1.6,
         "icon-anchor": "bottom",
         "icon-allow-overlap": true,
       },
