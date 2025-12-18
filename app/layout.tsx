@@ -1,26 +1,23 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+/* fonts unchanged */
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://andes-ski.vercel.app"),
+
   title: {
     default: "AndesMap",
     template: "%s · AndesMap",
   },
+
   description:
     "An interactive map for exploring Andean mountain routes, ski areas, and terrain data. Built to support decision-making for backcountry travel and route planning.",
+
   applicationName: "AndesMap",
+
   keywords: [
     "Andes",
     "backcountry skiing",
@@ -30,9 +27,25 @@ export const metadata: Metadata = {
     "maplibre",
     "geospatial data",
   ],
+
   authors: [{ name: "Eduardo Belluti" }],
   creator: "Eduardo Belluti",
-  metadataBase: new URL("https://andes-ski.vercel.app"),
+
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/favicon-16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-120.png", sizes: "120x120" },
+      { url: "/icons/apple-touch-152.png", sizes: "152x152" },
+      { url: "/icons/apple-touch-180.png", sizes: "180x180" },
+    ],
+  },
+
+  manifest: "/manifest.json",
+
   openGraph: {
     title: "AndesMap",
     description:
@@ -42,6 +55,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+
   twitter: {
     card: "summary_large_image",
     title: "AndesMap",
@@ -51,18 +65,18 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#0f172a",
+};
+
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
