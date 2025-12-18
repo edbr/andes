@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Map, X } from "lucide-react";
 import { closeAllMapPanels } from "@/lib/mapUi";
 
 export default function MapLegend() {
@@ -44,13 +43,18 @@ export default function MapLegend() {
       ====================================================== */}
       <button
         onClick={() => {
-        closeAllMapPanels();
-        setOpen(true);
-      }}
+          closeAllMapPanels();
+          setOpen(true);
+        }}
         className="map-ui-fab"
         aria-label="Open map legend"
       >
-        <Map className="w-5 h-5" />
+        <img
+          src="/icons/ui/icon-legend.svg"
+          alt="Legend"
+          className="w-5 h-5"
+          draggable={false}
+        />
       </button>
 
       {/* ======================================================
@@ -58,7 +62,7 @@ export default function MapLegend() {
       ====================================================== */}
       {open && (
         <div className="map-ui-sheet">
-          {/* Backdrop (tap-through allowed) */}
+          {/* Backdrop */}
           <div className="map-ui-backdrop" onClick={close} />
 
           {/* Panel */}
@@ -73,7 +77,12 @@ export default function MapLegend() {
                 className="map-ui-close-btn"
                 aria-label="Close legend"
               >
-                <X className="w-4 h-4" />
+                <img
+                  src="/icons/ui/icon-close.svg"
+                  alt="Close"
+                  className="w-4 h-4"
+                  draggable={false}
+                />
               </button>
             </div>
 
@@ -84,24 +93,24 @@ export default function MapLegend() {
               <span className="map-ui-section-label">Points</span>
 
               <LegendRow
-                icon="/icons/ski.png"
+                icon="/icons/markers/marker-resort-48.png"
                 label="Ski Resort / Base Area"
-                size="w-6 h-6"
+                size="w-8 h-8"
               />
               <LegendRow
-                icon="/icons/volcano.png"
+                icon="/icons/markers/marker-volcano-48.png"
                 label="Volcano (Ski Objective)"
-                size="w-6 h-6"
+                size="w-8 h-8"
               />
               <LegendRow
-                icon="/icons/mountain.png"
+                icon="/icons/markers/marker-mountain-48.png"
                 label="Major Mountain / Peak"
-                size="w-5 h-5"
+                size="w-8 h-8"
               />
               <LegendRow
-                icon="/icons/parking.png"
+                icon="/icons/markers/marker-parking-48.png"
                 label="Parking / Trailhead"
-                size="w-4 h-4"
+                size="w-8 h-8"
               />
             </div>
 
@@ -146,7 +155,12 @@ function LegendRow({
 }) {
   return (
     <div className="flex items-center gap-3 mb-2">
-      <img src={icon} alt={label} className={`${size} object-contain`} />
+      <img
+        src={icon}
+        alt={label}
+        className={`${size} object-contain`}
+        draggable={false}
+      />
       <span className="text-gray-800 text-sm">{label}</span>
     </div>
   );

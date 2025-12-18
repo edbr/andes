@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Layers, X } from "lucide-react";
 import { MAP_STYLES, MapStyleKey } from "@/map/styles";
 import { closeAllMapPanels } from "@/lib/mapUi";
 
@@ -15,9 +14,9 @@ export default function MapStyleSelector({ value, onChange }: Props) {
   const [closing, setClosing] = useState(false);
   const closeTimeout = useRef<number | null>(null);
 
-  // ------------------------------------------------------------
-  // Close with animation (safe + idempotent)
-  // ------------------------------------------------------------
+  /* ------------------------------------------------------------
+     Close with animation (safe + idempotent)
+  ------------------------------------------------------------ */
   function close() {
     if (closing || closeTimeout.current) return;
 
@@ -29,9 +28,9 @@ export default function MapStyleSelector({ value, onChange }: Props) {
     }, 200);
   }
 
-  // ------------------------------------------------------------
-  // Global close handler (map click, other panels)
-  // ------------------------------------------------------------
+  /* ------------------------------------------------------------
+     Global close handler
+  ------------------------------------------------------------ */
   useEffect(() => {
     function handleGlobalClose() {
       if (open) close();
@@ -43,9 +42,9 @@ export default function MapStyleSelector({ value, onChange }: Props) {
     };
   }, [open]);
 
-  // ------------------------------------------------------------
-  // ESC key support
-  // ------------------------------------------------------------
+  /* ------------------------------------------------------------
+     ESC key support
+  ------------------------------------------------------------ */
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape" && open) close();
@@ -74,7 +73,12 @@ export default function MapStyleSelector({ value, onChange }: Props) {
         className="map-ui-fab"
         aria-label="Change map style"
       >
-        <Layers className="w-5 h-5 text-gray-700" />
+        <img
+          src="/icons/ui/icon-layers.svg"
+          alt="Map styles"
+          className="w-5 h-5"
+          draggable={false}
+        />
       </button>
 
       {/* ======================================================
@@ -82,11 +86,8 @@ export default function MapStyleSelector({ value, onChange }: Props) {
       ====================================================== */}
       {open && (
         <div className="map-ui-sheet">
-          {/* Backdrop (does NOT block map interaction) */}
-          <div
-            className="map-ui-backdrop"
-            onClick={close}
-          />
+          {/* Backdrop */}
+          <div className="map-ui-backdrop" onClick={close} />
 
           {/* Panel */}
           <div className={`map-ui-panel ${closing ? "closing" : ""}`}>
@@ -100,7 +101,12 @@ export default function MapStyleSelector({ value, onChange }: Props) {
                 className="map-ui-close-btn"
                 aria-label="Close map style"
               >
-                <X className="w-4 h-4" />
+                <img
+                  src="/icons/ui/icon-close.svg"
+                  alt="Close"
+                  className="w-4 h-4"
+                  draggable={false}
+                />
               </button>
             </div>
 

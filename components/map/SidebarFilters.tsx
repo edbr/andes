@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
@@ -46,9 +45,9 @@ export default function SidebarFilters(props: Props) {
     protectedAreas: false,
   });
 
-  // ------------------------------------------------------------
-  // Close panel (idempotent + animated)
-  // ------------------------------------------------------------
+  /* ------------------------------------------------------------
+     Close panel (idempotent + animated)
+  ------------------------------------------------------------ */
   function closePanel() {
     if (!open || closing) return;
 
@@ -60,9 +59,9 @@ export default function SidebarFilters(props: Props) {
     }, 200);
   }
 
-  // ------------------------------------------------------------
-  // External close signal (map click, other panels)
-  // ------------------------------------------------------------
+  /* ------------------------------------------------------------
+     External close signal
+  ------------------------------------------------------------ */
   useEffect(() => {
     function handleGlobalClose() {
       closePanel();
@@ -74,9 +73,9 @@ export default function SidebarFilters(props: Props) {
     };
   }, [open, closing]);
 
-  // ------------------------------------------------------------
-  // Layer toggle helper
-  // ------------------------------------------------------------
+  /* ------------------------------------------------------------
+     Layer toggle helper
+  ------------------------------------------------------------ */
   function toggleLayer<K extends keyof typeof layers>(
     key: K,
     value: boolean,
@@ -91,15 +90,20 @@ export default function SidebarFilters(props: Props) {
       {/* ======================================================
           FAB — ALWAYS VISIBLE
       ====================================================== */}
-        <button
+      <button
         onClick={() => {
-        closeAllMapPanels();
-        setOpen(true);
-      }}
+          closeAllMapPanels();
+          setOpen(true);
+        }}
         className="map-ui-fab"
         aria-label="Open map filters"
       >
-        <SlidersHorizontal className="w-5 h-5 text-gray-700" />
+        <img
+          src="/icons/ui/icon-filter.svg"
+          alt="Filters"
+          className="w-5 h-5"
+          draggable={false}
+        />
       </button>
 
       {/* ======================================================
@@ -107,10 +111,8 @@ export default function SidebarFilters(props: Props) {
       ====================================================== */}
       {open && (
         <div className="map-ui-sheet">
-          {/* Backdrop (allows map close, but not block FABs) */}
           <div className="map-ui-backdrop" onClick={closePanel} />
 
-          {/* Panel */}
           <div className={`map-ui-panel ${closing ? "closing" : ""}`}>
             {/* Header */}
             <div className="map-ui-header">
@@ -122,7 +124,12 @@ export default function SidebarFilters(props: Props) {
                 className="map-ui-close-btn"
                 aria-label="Close filters"
               >
-                <X className="w-4 h-4" />
+                <img
+                  src="/icons/ui/icon-close.svg"
+                  alt="Close"
+                  className="w-4 h-4"
+                  draggable={false}
+                />
               </button>
             </div>
 
@@ -150,56 +157,64 @@ export default function SidebarFilters(props: Props) {
               </div>
 
               {/* Layers */}
-              <div className="pt-2 border-t space-y-4">
-                <ToggleRow
-                  label="Protected Areas"
-                  checked={layers.protectedAreas}
-                  onChange={(v) =>
-                    toggleLayer("protectedAreas", v, onToggleProtectedAreas)
-                  }
-                />
+{/* Layers */}
+<div className="pt-2 border-t space-y-4">
+  <ToggleRow
+    icon="/icons/markers/marker-protected-48.png"
+    label="Protected Areas"
+    checked={layers.protectedAreas}
+    onChange={(v) =>
+      toggleLayer("protectedAreas", v, onToggleProtectedAreas)
+    }
+  />
 
-                <ToggleRow
-                  label="Volcanoes"
-                  checked={layers.volcanoes}
-                  onChange={(v) =>
-                    toggleLayer("volcanoes", v, onToggleVolcanoes)
-                  }
-                />
+  <ToggleRow
+    icon="/icons/markers/marker-volcano-48.png"
+    label="Volcanoes"
+    checked={layers.volcanoes}
+    onChange={(v) =>
+      toggleLayer("volcanoes", v, onToggleVolcanoes)
+    }
+  />
 
-                <ToggleRow
-                  label="Mountains"
-                  checked={layers.mountains}
-                  onChange={(v) =>
-                    toggleLayer("mountains", v, onToggleMountains)
-                  }
-                />
+  <ToggleRow
+    icon="/icons/markers/marker-mountain-48.png"
+    label="Mountains"
+    checked={layers.mountains}
+    onChange={(v) =>
+      toggleLayer("mountains", v, onToggleMountains)
+    }
+  />
 
-                <ToggleRow
-                  label="Ski Resorts"
-                  checked={layers.skiResorts}
-                  onChange={(v) =>
-                    toggleLayer("skiResorts", v, onToggleSkiResorts)
-                  }
-                />
+  <ToggleRow
+    icon="/icons/markers/marker-resort-48.png"
+    label="Ski Resorts"
+    checked={layers.skiResorts}
+    onChange={(v) =>
+      toggleLayer("skiResorts", v, onToggleSkiResorts)
+    }
+  />
 
-                <ToggleRow
-                  label="Parking"
-                  checked={layers.parking}
-                  onChange={(v) =>
-                    toggleLayer("parking", v, onToggleParking)
-                  }
-                />
+  <ToggleRow
+    icon="/icons/markers/marker-parking-48.png"
+    label="Parking"
+    checked={layers.parking}
+    onChange={(v) =>
+      toggleLayer("parking", v, onToggleParking)
+    }
+  />
 
-                <ToggleRow
-                  label="Routes"
-                  checked={layers.routes}
-                  onChange={(v) => {
-                    toggleLayer("routes", v, onToggleRoutes);
-                    if (!v) onToggleSkiOnly(false);
-                  }}
-                />
-              </div>
+  <ToggleRow
+    icon="/icons/markers/marker-route-48.png"
+    label="Routes"
+    checked={layers.routes}
+    onChange={(v) => {
+      toggleLayer("routes", v, onToggleRoutes);
+      if (!v) onToggleSkiOnly(false);
+    }}
+  />
+</div>
+
             </Card>
           </div>
         </div>
@@ -214,16 +229,29 @@ export default function SidebarFilters(props: Props) {
 
 function ToggleRow({
   label,
+  icon,
   checked,
   onChange,
 }: {
   label: string;
+  icon?: string;
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="map-ui-toggle-row">
-      <span>{label}</span>
+    <div className="map-ui-toggle-row flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        {icon && (
+          <img
+            src={icon}
+            alt=""
+            className="w-8 h-8 object-contain opacity-80"
+            draggable={false}
+          />
+        )}
+        <span>{label}</span>
+      </div>
+
       <Switch checked={checked} onCheckedChange={onChange} />
     </div>
   );

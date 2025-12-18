@@ -344,20 +344,30 @@ export default function AndesMap() {
           onToggleSkiOnly={() => {}}
         />
 
-        <button
-          onClick={() => {
-            const map = mapRef.current;
-            if (!map) return;
+<button
+  onClick={() => {
+    const map = mapRef.current;
+    if (!map) return;
 
-            const next = !is3D;
-            setIs3D(next);
-            applyCameraMode(map, next);
-          }}
-          className="map-ui-fab"
-          title={is3D ? "Switch to 2D" : "Switch to 3D"}
-        >
-          {is3D ? "2D" : "3D"}
-        </button>
+    const next = !is3D;
+    setIs3D(next);
+    applyCameraMode(map, next);
+  }}
+  className="map-ui-fab"
+  title={is3D ? "Switch to 2D" : "Switch to 3D"}
+>
+  <img
+    src={
+      is3D
+        ? "/icons/ui/icon-2d.svg"
+        : "/icons/ui/icon-3d.svg"
+    }
+    alt={is3D ? "2D view" : "3D view"}
+    className="w-5 h-5"
+    draggable={false}
+  />
+</button>
+
 
         <SearchMap map={mapRef.current ?? undefined} />
         <MapLegend />

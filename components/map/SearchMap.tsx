@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Search, X } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { closeAllMapPanels } from "@/lib/mapUi";
 
@@ -57,11 +56,11 @@ export default function MapSearch({ map }: Props) {
     return `&viewbox=${b.getWest()},${b.getNorth()},${b.getEast()},${b.getSouth()}&bounded=1`;
   }
 
-  
   function openDirections(place: SearchResult) {
     window.open(
       `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}`,
-      "_blank"
+      "_blank",
+      "noopener,noreferrer"
     );
   }
 
@@ -155,7 +154,12 @@ export default function MapSearch({ map }: Props) {
         className="map-ui-fab"
         aria-label="Search map"
       >
-        <Search />
+        <img
+          src="/icons/ui/icon-search.svg"
+          alt="Search"
+          className="w-5 h-5"
+          draggable={false}
+        />
       </button>
 
       {open && (
@@ -173,7 +177,12 @@ export default function MapSearch({ map }: Props) {
                 className="map-ui-close-btn"
                 aria-label="Close search"
               >
-                <X className="w-4 h-4" />
+                <img
+                  src="/icons/ui/icon-close.svg"
+                  alt="Close"
+                  className="w-4 h-4"
+                  draggable={false}
+                />
               </button>
             </div>
 
@@ -182,7 +191,7 @@ export default function MapSearch({ map }: Props) {
               ref={inputRef}
               value={query}
               onChange={(e) => runSearch(e.target.value)}
-               inputMode="search"
+              inputMode="search"
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck={false}

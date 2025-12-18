@@ -86,7 +86,6 @@ export function addRouteLayers(map: maplibregl.Map) {
         "line-join": "round",
       },
       paint: {
-        // subtle halo to improve contrast on snow / imagery
         "line-color": "rgba(0,0,0,0.25)",
         "line-width": [
           "interpolate",
@@ -102,7 +101,7 @@ export function addRouteLayers(map: maplibregl.Map) {
   }
 
   /* ------------------------
-     ROUTES — MAIN LINE (DASHED)
+     ROUTES — MAIN LINE
   ------------------------ */
   if (!map.getLayer("osm-routes-line")) {
     map.addLayer({
@@ -110,28 +109,22 @@ export function addRouteLayers(map: maplibregl.Map) {
       type: "line",
       source: "osm-routes",
       "source-layer": "osm_routes_clean",
-      minzoom: 9, // 👈 key line
+      minzoom: 9,
       layout: {
         "line-cap": "square",
         "line-join": "miter",
       },
       paint: {
-        // soft near-black
         "line-color": "#0f172a",
-
-        // ✅ VALID: constant dash pattern
         "line-dasharray": [4, 3],
-
-        // ✅ Zoom-scaled thickness
         "line-width": [
           "interpolate",
           ["linear"],
           ["zoom"],
-          1, 0.04,
-          11, 1,
-          14, 1,
+          9, 0.8,
+          12, 1.4,
+          14, 1.8,
         ],
-
         "line-opacity": 1,
       },
     });
@@ -156,8 +149,8 @@ export function addMountainVolcanoLayers(map: maplibregl.Map) {
       source: "mountain-volcano",
       filter: ["==", ["get", "natural"], "volcano"],
       layout: {
-        "icon-image": "volcano-icon",
-        "icon-size": 0.9,
+        "icon-image": "marker-volcano",
+        "icon-size": 1,
         "icon-anchor": "bottom",
         "icon-allow-overlap": true,
       },
@@ -171,13 +164,19 @@ export function addMountainVolcanoLayers(map: maplibregl.Map) {
       source: "mountain-volcano",
       filter: ["==", ["get", "natural"], "peak"],
       layout: {
-        "icon-image": "mountain-icon",
-        "icon-size": 0.85,
+        "icon-image": "marker-mountain",
+        "icon-size": 1,
         "icon-anchor": "bottom",
         "icon-allow-overlap": true,
       },
       paint: {
-        "icon-opacity": ["interpolate", ["linear"], ["zoom"], 6, 0, 8, 1],
+        "icon-opacity": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          6, 0,
+          8, 1,
+        ],
       },
     });
   }
@@ -204,8 +203,8 @@ export function addParkingLayers(map: maplibregl.Map) {
       source: "parking",
       filter: ["!", ["has", "point_count"]],
       layout: {
-        "icon-image": "parking-icon",
-        "icon-size": ["interpolate", ["linear"], ["zoom"], 6, 0.2, 10, 0.45],
+        "icon-image": "marker-parking",
+        "icon-size": 1,
         "icon-allow-overlap": true,
       },
     });
@@ -229,8 +228,8 @@ export function addSkiResortLayers(map: maplibregl.Map) {
       type: "symbol",
       source: "ski-resorts",
       layout: {
-        "icon-image": "ski-icon",
-        "icon-size": 0.9,
+        "icon-image": "marker-resort",
+        "icon-size": 1,
         "icon-anchor": "bottom",
         "icon-allow-overlap": true,
       },
