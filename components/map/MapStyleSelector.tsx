@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MAP_STYLES, MapStyleKey } from "@/map/styles";
 import { closeAllMapPanels } from "@/lib/mapUi";
+import { cn } from "@/lib/utils";
 
 interface Props {
   value: MapStyleKey;
@@ -70,7 +71,10 @@ export default function MapStyleSelector({ value, onChange }: Props) {
             setOpen(true);
           }
         }}
-        className="map-ui-fab"
+        className={cn(
+            "map-ui-fab",
+            open && "is-active"
+          )}
         aria-label="Change map style"
       >
         <img

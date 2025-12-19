@@ -6,6 +6,7 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { closeAllMapPanels } from "@/lib/mapUi";
+import { cn } from "@/lib/utils";
 
 interface Props {
   onFilterChange: (filters: any) => void;
@@ -95,7 +96,10 @@ export default function SidebarFilters(props: Props) {
           closeAllMapPanels();
           setOpen(true);
         }}
-        className="map-ui-fab"
+        className={cn(
+            "map-ui-fab",
+            open && "is-active"
+          )}
         aria-label="Open map filters"
       >
         <img

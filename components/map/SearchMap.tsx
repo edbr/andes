@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import { closeAllMapPanels } from "@/lib/mapUi";
+import { cn } from "@/lib/utils";
 
 interface Props {
   map?: maplibregl.Map | null;
@@ -151,7 +152,10 @@ export default function MapSearch({ map }: Props) {
       {/* FAB */}
       <button
         onClick={openPanel}
-        className="map-ui-fab"
+        className={cn(
+            "map-ui-fab",
+            open && "is-active"
+          )}
         aria-label="Search map"
       >
         <img

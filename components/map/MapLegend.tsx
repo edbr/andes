@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { closeAllMapPanels } from "@/lib/mapUi";
+import { cn } from "@/lib/utils";
 
 export default function MapLegend() {
   const [open, setOpen] = useState(false);
@@ -41,21 +42,26 @@ export default function MapLegend() {
       {/* ======================================================
           FAB — ALWAYS VISIBLE
       ====================================================== */}
-      <button
-        onClick={() => {
-          closeAllMapPanels();
-          setOpen(true);
-        }}
-        className="map-ui-fab"
-        aria-label="Open map legend"
-      >
-        <img
-          src="/icons/ui/icon-legend.svg"
-          alt="Legend"
-          className="w-5 h-5"
-          draggable={false}
-        />
-      </button>
+<button
+  onClick={() => {
+    closeAllMapPanels();
+    setOpen(true);
+  }}
+  className={cn(
+    "map-ui-fab",
+    open && "is-active"
+  )}
+  aria-label="Open map legend"
+  aria-pressed={open}
+>
+  <img
+    src="/icons/ui/icon-legend.svg"
+    alt="Legend"
+    className="w-5 h-5"
+    draggable={false}
+  />
+</button>
+
 
       {/* ======================================================
           BOTTOM SHEET
