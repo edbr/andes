@@ -2,7 +2,7 @@
 import maplibregl from "maplibre-gl";
 
 /* ============================================================
-   ROUTES + PROTECTED AREAS (WITH LABELS)
+   ROUTES + PROTECTED AREAS
 ============================================================ */
 export function addRouteLayers(map: maplibregl.Map) {
   /* ------------------------
@@ -31,6 +31,7 @@ export function addRouteLayers(map: maplibregl.Map) {
       type: "fill",
       source: "protected-areas",
       "source-layer": "protected_areas",
+      layout: { visibility: "none" },
       paint: {
         "fill-color": [
           "match",
@@ -52,137 +53,101 @@ export function addRouteLayers(map: maplibregl.Map) {
     });
   }
 
-/* ------------------------
-   PROTECTED AREAS — OUTLINE
------------------------- */
-if (!map.getLayer("protected-areas-outline")) {
-  map.addLayer({
-    id: "protected-areas-outline",
-    type: "line",
-    source: "protected-areas",
-    "source-layer": "protected_areas",
+  /* ------------------------
+     PROTECTED AREAS — OUTLINE
+  ------------------------ */
+  if (!map.getLayer("protected-areas-outline")) {
+    map.addLayer({
+      id: "protected-areas-outline",
+      type: "line",
+      source: "protected-areas",
+      "source-layer": "protected_areas",
+      layout: { visibility: "none" },
+      paint: {
+        "line-color": "#065F46",
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          6, 0.6,
+          10, 1.6,
+        ],
+        "line-opacity": 0.6,
+      },
+    });
+  }
 
-    // 👇 start hidden
-    layout: {
-      visibility: "none",
-    },
+  /* ------------------------
+     PROTECTED AREAS — ICONS
+  ------------------------ */
+  if (!map.getLayer("protected-areas-icons")) {
+    map.addLayer({
+      id: "protected-areas-icons",
+      type: "symbol",
+      source: "protected-areas",
+      "source-layer": "protected_areas",
+      minzoom: 7,
+      layout: {
+        visibility: "none",
+        "symbol-placement": "point",
+        "icon-image": [
+          "match",
+          ["get", "category"],
+          "national_park", "marker-protected-national",
+          "regional_park", "marker-protected-regional",
+          "strict_reserve", "marker-protected-reserve",
+          "marker-protected-default",
+        ],
+        "icon-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          7, 0.55,
+          10, 0.8,
+          13, 1.05,
+        ],
+        "icon-allow-overlap": false,
+        "icon-ignore-placement": false,
+        "symbol-sort-key": 1,
+      },
+    });
+  }
 
-    paint: {
-      "line-color": "#065F46",
-      "line-width": [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        6, 0.6,
-        10, 1.6,
-      ],
-      "line-opacity": 0.6,
-    },
-  });
-}
-
-/* ------------------------
-   PROTECTED AREAS — ICONS
------------------------- */
-if (!map.getLayer("protected-areas-icons")) {
-  map.addLayer({
-    id: "protected-areas-icons",
-    type: "symbol",
-    source: "protected-areas",
-    "source-layer": "protected_areas",
-    minzoom: 7,
-    layout: {
-      "symbol-placement": "point",
-
-      "icon-image": [
-        "match",
-        ["get", "category"],
-        "national_park", "marker-protected-national",
-        "regional_park", "marker-protected-regional",
-        "strict_reserve", "marker-protected-reserve",
-        "marker-protected-default"
-      ],
-
-      "icon-size": [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        7, 0.55,
-        10, 0.8,
-        13, 1.05
-      ],
-
-      "icon-allow-overlap": false,
-      "icon-ignore-placement": false,
-      "symbol-sort-key": 1,
-      "visibility": "none" // 👈 ADD THIS
-    },
-    paint: {
-      "icon-opacity": [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        6, 0,
-        7, 1
-      ]
-    }
-  });
-}
-
-/* ------------------------
-   PROTECTED AREAS — LABELS (ONE PER AREA)
------------------------- */
-if (!map.getLayer("protected-areas-labels")) {
-  map.addLayer({
-    id: "protected-areas-labels",
-    type: "symbol",
-    source: "protected-areas",
-    "source-layer": "protected_areas",
-
-    // 👇 show labels only when toggle enables them
-    layout: {
-      visibility: "none",
-
-      // 🔑 CRITICAL: single placement per feature
-      "symbol-placement": "point",
-
-      "text-field": ["get", "name"],
-      "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-
-      "text-size": [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        8, 11,
-        12, 13,
-        14, 15,
-      ],
-
-      // 👇 do NOT allow repetition
-      "text-allow-overlap": false,
-      "text-ignore-placement": false,
-
-      // 👇 single anchor prevents duplication
-      "text-anchor": "center",
-
-      // 👇 larger parks win placement
-      "symbol-sort-key": [
-        "coalesce",
-        ["get", "area_km2"],
-        0,
-      ],
-    },
-
-    paint: {
-      "text-color": "#064E3B",
-      "text-halo-color": "rgba(255,255,255,0.9)",
-      "text-halo-width": 1.2,
-    },
-
-    // 👇 prevents clutter at low zoom
-    minzoom: 3,
-  });
-}
+  /* ------------------------
+     PROTECTED AREAS — LABELS
+  ------------------------ */
+  if (!map.getLayer("protected-areas-labels")) {
+    map.addLayer({
+      id: "protected-areas-labels",
+      type: "symbol",
+      source: "protected-areas",
+      "source-layer": "protected_areas",
+      minzoom: 3,
+      layout: {
+        visibility: "none",
+        "symbol-placement": "point",
+        "text-field": ["coalesce", ["get", "name"], ""],
+        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          8, 11,
+          12, 13,
+          14, 15,
+        ],
+        "text-anchor": "center",
+        "text-allow-overlap": false,
+        "text-ignore-placement": false,
+        "symbol-sort-key": ["coalesce", ["get", "area_km2"], 0],
+      },
+      paint: {
+        "text-color": "#064E3B",
+        "text-halo-color": "rgba(255,255,255,0.9)",
+        "text-halo-width": 1.2,
+      },
+    });
+  }
 
   /* ------------------------
      ROUTES — CASING
@@ -193,10 +158,7 @@ if (!map.getLayer("protected-areas-labels")) {
       type: "line",
       source: "osm-routes",
       "source-layer": "osm_routes_clean",
-      layout: {
-        "line-cap": "round",
-        "line-join": "round",
-      },
+      layout: { "line-cap": "round", "line-join": "round" },
       paint: {
         "line-color": "rgba(0,0,0,0.25)",
         "line-width": [
@@ -222,10 +184,7 @@ if (!map.getLayer("protected-areas-labels")) {
       source: "osm-routes",
       "source-layer": "osm_routes_clean",
       minzoom: 9,
-      layout: {
-        "line-cap": "square",
-        "line-join": "miter",
-      },
+      layout: { "line-cap": "square", "line-join": "miter" },
       paint: {
         "line-color": "#0f172a",
         "line-dasharray": [4, 3],
@@ -237,7 +196,6 @@ if (!map.getLayer("protected-areas-labels")) {
           12, 1.4,
           14, 1.8,
         ],
-        "line-opacity": 1,
       },
     });
   }
@@ -268,7 +226,7 @@ if (!map.getLayer("protected-areas-labels")) {
         "text-keep-upright": true,
         "text-allow-overlap": false,
         "text-ignore-placement": false,
-        "symbol-sort-key": 0, // lowest priority
+        "symbol-sort-key": 0,
       },
       paint: {
         "text-color": "#334155",
@@ -279,49 +237,22 @@ if (!map.getLayer("protected-areas-labels")) {
   }
 }
 
-
 /* ============================================================
-   MOUNTAINS + VOLCANOES (CLUSTERED + LABELED)
+   MOUNTAINS + VOLCANOES
 ============================================================ */
 export function addMountainVolcanoLayers(map: maplibregl.Map) {
-  /* ------------------------
-     SOURCE (CLUSTERED)
-  ------------------------ */
   if (!map.getSource("mountain-volcano")) {
     map.addSource("mountain-volcano", {
       type: "geojson",
       data: "/data/mountain-volcano-clean.geojson",
       cluster: true,
-      clusterMaxZoom: 8, // clusters disappear after this zoom
-      clusterRadius: 50,
+      clusterMaxZoom: 6,
+      clusterRadius: 12,
     });
   }
 
   /* ------------------------
-     VOLCANO ICONS (NO CLUSTERS)
-  ------------------------ */
-  if (!map.getLayer("volcano-points")) {
-    map.addLayer({
-      id: "volcano-points",
-      type: "symbol",
-      source: "mountain-volcano",
-      filter: [
-        "all",
-        ["!", ["has", "point_count"]],
-        ["==", ["get", "natural"], "volcano"],
-      ],
-      layout: {
-        "icon-image": "marker-volcano",
-        "icon-size": 1.6,
-        "icon-anchor": "bottom",
-        "icon-allow-overlap": true,
-        "text-optional": true,
-      },
-    });
-  }
-
-  /* ------------------------
-     MOUNTAIN ICONS (NO CLUSTERS)
+     MOUNTAINS (BASE)
   ------------------------ */
   if (!map.getLayer("mountain-points")) {
     map.addLayer({
@@ -331,20 +262,45 @@ export function addMountainVolcanoLayers(map: maplibregl.Map) {
       filter: [
         "all",
         ["!", ["has", "point_count"]],
+        ["has", "natural"],
         ["==", ["get", "natural"], "peak"],
       ],
       layout: {
+        visibility: "none",
         "icon-image": "marker-mountain",
         "icon-size": 1.6,
         "icon-anchor": "bottom",
         "icon-allow-overlap": true,
-        "text-optional": true,
       },
     });
   }
 
   /* ------------------------
-     MOUNTAIN LABELS (CRITICAL FIX)
+     VOLCANOES (TOP)
+  ------------------------ */
+  if (!map.getLayer("volcano-points")) {
+    map.addLayer({
+      id: "volcano-points",
+      type: "symbol",
+      source: "mountain-volcano",
+      filter: [
+        "all",
+        ["!", ["has", "point_count"]],
+        ["has", "natural"],
+        ["==", ["get", "natural"], "volcano"],
+      ],
+      layout: {
+        visibility: "none",
+        "icon-image": "marker-volcano",
+        "icon-size": 1.6,
+        "icon-anchor": "bottom",
+        "icon-allow-overlap": true,
+      },
+    });
+  }
+
+  /* ------------------------
+     MOUNTAIN LABELS
   ------------------------ */
   if (!map.getLayer("mountain-labels")) {
     map.addLayer({
@@ -378,20 +334,56 @@ export function addMountainVolcanoLayers(map: maplibregl.Map) {
         "text-color": "#374151",
         "text-halo-color": "rgba(255,255,255,0.9)",
         "text-halo-width": 1.25,
-        "text-halo-blur": 0.5,
       },
     });
   }
+  /* ------------------------
+   VOLCANO LABELS
+------------------------ */
+if (!map.getLayer("volcano-labels")) {
+  map.addLayer({
+    id: "volcano-labels",
+    type: "symbol",
+    source: "mountain-volcano",
+    filter: [
+      "all",
+      ["!", ["has", "point_count"]],
+      ["has", "natural"],
+      ["==", ["get", "natural"], "volcano"],
+    ],
+    minzoom: 8,
+    layout: {
+      "text-field": ["coalesce", ["get", "name"], ""],
+      "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+      "text-size": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        8, 12,
+        11, 14,
+        14, 16,
+      ],
+      "text-offset": [0, 1.05],
+      "text-anchor": "top",
+      "text-allow-overlap": false,
+      "text-ignore-placement": false,
+
+      // Volcano names should win over mountains
+      "symbol-sort-key": 20,
+    },
+    paint: {
+      "text-color": "#7C2D12", // warm volcanic tone
+      "text-halo-color": "rgba(255,255,255,0.95)",
+      "text-halo-width": 1.3,
+    },
+  });
+}
 }
 
-
 /* ============================================================
-   PARKING (CLUSTERED + LABELED)
+   PARKING
 ============================================================ */
 export function addParkingLayers(map: maplibregl.Map) {
-  /* ------------------------
-     SOURCE (CLUSTERED)
-  ------------------------ */
   if (!map.getSource("parking")) {
     map.addSource("parking", {
       type: "geojson",
@@ -402,9 +394,6 @@ export function addParkingLayers(map: maplibregl.Map) {
     });
   }
 
-  /* ------------------------
-     PARKING ICONS (NO CLUSTERS)
-  ------------------------ */
   if (!map.getLayer("parking-points")) {
     map.addLayer({
       id: "parking-points",
@@ -412,64 +401,20 @@ export function addParkingLayers(map: maplibregl.Map) {
       source: "parking",
       filter: ["!", ["has", "point_count"]],
       layout: {
+        visibility: "none",
         "icon-image": "marker-parking",
         "icon-size": 1.4,
         "icon-anchor": "bottom",
         "icon-allow-overlap": true,
-        "text-optional": true, // critical for label coexistence
-      },
-    });
-  }
-
-  /* ------------------------
-     PARKING LABELS
-  ------------------------ */
-  if (!map.getLayer("parking-labels")) {
-    map.addLayer({
-      id: "parking-labels",
-      type: "symbol",
-      source: "parking",
-      filter: ["!", ["has", "point_count"]],
-      minzoom: 10,
-      layout: {
-        "text-field": [
-          "coalesce",
-          ["get", "name"],
-          "Parking"
-        ],
-        "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
-        "text-size": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          10, 10,
-          12, 11,
-          14, 12
-        ],
-        "text-offset": [0, 0.9],
-        "text-anchor": "top",
-        "text-allow-overlap": false,
-        "text-ignore-placement": false,
-        "symbol-sort-key": 5, // lower than resorts & mountains
-      },
-      paint: {
-        "text-color": "#374151", // slate-700
-        "text-halo-color": "rgba(255,255,255,0.9)",
-        "text-halo-width": 1.1,
-        "text-halo-blur": 0.4,
       },
     });
   }
 }
 
-
 /* ============================================================
-   SKI RESORTS (ICONS + LABELS)
+   SKI RESORTS
 ============================================================ */
 export function addSkiResortLayers(map: maplibregl.Map) {
-  /* ------------------------
-     SOURCE
-  ------------------------ */
   if (!map.getSource("ski-resorts")) {
     map.addSource("ski-resorts", {
       type: "geojson",
@@ -477,27 +422,21 @@ export function addSkiResortLayers(map: maplibregl.Map) {
     });
   }
 
-  /* ------------------------
-     RESORT ICONS
-  ------------------------ */
   if (!map.getLayer("ski-resorts-points")) {
     map.addLayer({
       id: "ski-resorts-points",
       type: "symbol",
       source: "ski-resorts",
       layout: {
+        visibility: "none",
         "icon-image": "marker-resort",
         "icon-size": 1.6,
         "icon-anchor": "bottom",
         "icon-allow-overlap": true,
-        "text-optional": true, // critical for label coexistence
       },
     });
   }
 
-  /* ------------------------
-     RESORT LABELS
-  ------------------------ */
   if (!map.getLayer("ski-resorts-labels")) {
     map.addLayer({
       id: "ski-resorts-labels",
@@ -517,15 +456,12 @@ export function addSkiResortLayers(map: maplibregl.Map) {
         ],
         "text-offset": [0, 0.9],
         "text-anchor": "top",
-        "text-allow-overlap": false,
-        "text-ignore-placement": false,
-        "symbol-sort-key": 20, // higher priority than mountains
+        "symbol-sort-key": 20,
       },
       paint: {
-        "text-color": "#1f2937", // slate-800
+        "text-color": "#1f2937",
         "text-halo-color": "rgba(255,255,255,0.9)",
         "text-halo-width": 1.3,
-        "text-halo-blur": 0.5,
       },
     });
   }

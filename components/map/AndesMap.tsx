@@ -8,6 +8,7 @@ import SidebarFilters from "@/components/map/SidebarFilters";
 import MapLegend from "@/components/map/MapLegend";
 import MapStyleSelector from "@/components/map/MapStyleSelector";
 import SearchMap from "@/components/map/SearchMap";
+import SnowLayer from "@/components/map/SnowLayer";
 
 import { registerPMTiles } from "@/map/protocol";
 import { loadIcons } from "@/map/icons";
@@ -156,22 +157,50 @@ export default function AndesMap() {
   /* ------------------------
      FILTERS
   ------------------------ */
-  function applyVolcanoFilters() {
-    const map = mapRef.current;
-    if (!map?.getLayer("volcano-points")) return;
+/* ------------------------
+   FILTERS (SAFE: MOUNTAINS + VOLCANOES)
+------------------------ */
+function applyElevationFilters() {
+  const map = mapRef.current;
+  if (!map) return;
 
-    const filter: FilterSpecification = [
+  const [min, max] = filters.elevation;
+
+  // Volcanoes — MUST restate semantic filter
+  if (map.getLayer("volcano-points")) {
+    const volcanoFilter: FilterSpecification = [
       "all",
-      [">=", ["to-number", ["get", "ele"]], filters.elevation[0]],
-      ["<=", ["to-number", ["get", "ele"]], filters.elevation[1]],
+      ["!", ["has", "point_count"]],
+      ["has", "natural"],
+      ["==", ["get", "natural"], "volcano"],
+      [">=", ["to-number", ["get", "ele"]], min],
+      ["<=", ["to-number", ["get", "ele"]], max],
     ];
 
-    map.setFilter("volcano-points", filter);
+    map.setFilter("volcano-points", volcanoFilter);
   }
 
-  useEffect(() => {
-    applyVolcanoFilters();
-  }, [filters]);
+  // Mountains — keep in sync
+  if (map.getLayer("mountain-points")) {
+    const mountainFilter: FilterSpecification = [
+      "all",
+      ["!", ["has", "point_count"]],
+      ["has", "natural"],
+      ["==", ["get", "natural"], "peak"],
+      [">=", ["to-number", ["get", "ele"]], min],
+      ["<=", ["to-number", ["get", "ele"]], max],
+    ];
+
+    map.setFilter("mountain-points", mountainFilter);
+  }
+}
+
+/* ------------------------
+   APPLY FILTERS
+------------------------ */
+useEffect(() => {
+  applyElevationFilters();
+}, [filters.elevation]);
 
   /* ------------------------
      ski resort tooltip
@@ -228,7 +257,7 @@ export default function AndesMap() {
 
     setupSkiResortTooltips(map); 
     setupTooltips(map);
-    applyVolcanoFilters();
+    applyElevationFilters();
 
     /* ------------------------
        Parking → Google Maps directions
@@ -309,6 +338,9 @@ export default function AndesMap() {
     map.once("load", () => {
       bootstrapMap(map);
       applyCameraMode(map, is3D);
+        // 👇 DEBUG ONLY
+  // @ts-ignore
+  window.__map = map;
     });
 
     return () => {
@@ -413,6 +445,7 @@ export default function AndesMap() {
 
         <SearchMap map={mapRef.current ?? undefined} />
         <MapLegend />
+         <SnowLayer map={mapRef.current} />
         <MapStyleSelector value={mapStyle} onChange={handleStyleChange} />
       </div>
     </div>
