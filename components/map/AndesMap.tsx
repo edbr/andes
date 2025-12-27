@@ -242,72 +242,198 @@ useEffect(() => {
     popup.remove();
   });
 }
+/* ------------------------ elevation toggle----------------------- */
+  function setElevationColorVisible(map: maplibregl.Map, visible: boolean) {
+  if (!map.getLayer("elevation-color")) return;
 
+  map.setPaintProperty(
+    "elevation-color",
+    "color-relief-opacity",
+    visible ? 0.35 : 0
+  );
+}
+/* ------------------------
+   Elevation colors (hypsometric tint)
+------------------------ */
+function addElevationColorLayer(map: maplibregl.Map) {
+  // DEM source (lightweight, no terrain)
+  if (!map.getSource("dem")) {
+    map.addSource("dem", {
+      type: "raster-dem",
+      url: `https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=${process.env.NEXT_PUBLIC_MAPTILER_KEY}`,
+      tileSize: 256,
+      maxzoom: 11,
+    });
+  }
+
+  // Add layer (opacity defaults to 0 = OFF)
+  if (!map.getLayer("elevation-color")) {
+    map.addLayer({
+      id: "elevation-color",
+      type: "color-relief",
+      source: "dem",
+      paint: {
+        "color-relief-opacity": 0,
+        "color-relief-color": [
+          "interpolate",
+          ["linear"],
+          ["elevation"],
+          0, "#2c7bb6",
+          500, "#abd9e9",
+          1500, "#ffffbf",
+          2500, "#fdae61",
+          3500, "#f46d43",
+          4500, "#d73027",
+          6000, "#ffffff",
+        ],
+      },
+    });
+  }
+
+  // Keep it below routes if they exist
+  if (
+    map.getLayer("elevation-color") &&
+    map.getLayer("osm-routes-casing")
+  ) {
+    map.moveLayer("elevation-color", "osm-routes-casing");
+  }
+}
+
+/* ------------------------
+   Snowline (approximate)
+------------------------ */
+function addSnowlineLayer(map: maplibregl.Map) {
+  // Requires DEM (already added by elevation-color)
+  if (!map.getSource("dem")) return;
+
+  if (!map.getLayer("snowline")) {
+    map.addLayer({
+      id: "snowline",
+      type: "color-relief",
+      source: "dem",
+      paint: {
+        // OFF by default
+        "color-relief-opacity": 0,
+        "color-relief-color": [
+          "interpolate",
+          ["linear"],
+          ["elevation"],
+
+          // meters → subtle snow band
+  // Below snowline
+  0,    "#d6c3a3",
+  2400, "#edc379",
+
+  // Transition zone
+  2600, "#fcba03",
+  2900, "#2bed96",
+
+  // Likely snow
+  3200, "#7a0cf0",
+  3600, "#0cf0c2",
+
+  // High alpine
+  6000, "#0cf0f0",
+],
+      },
+    });
+  }
+
+  // Keep it under routes & labels
+  if (
+    map.getLayer("snowline") &&
+    map.getLayer("osm-routes-casing")
+  ) {
+    map.moveLayer("snowline", "osm-routes-casing");
+  }
+}
+
+function setSnowlineVisible(map: maplibregl.Map, visible: boolean) {
+  if (!map.getLayer("snowline")) return;
+
+  map.setPaintProperty(
+    "snowline",
+    "color-relief-opacity",
+    visible ? 0.45 : 0
+  );
+}
+
+
+/* ------------------------
+   MAP BOOTSTRAP
+------------------------ */
+async function bootstrapMap(map: maplibregl.Map) {
+  await loadIcons(map);
+
+  // --- Elevation color overlay (lightweight) ---
+  addElevationColorLayer(map);
+  addSnowlineLayer(map); // 👈 NEW
+  // --- Data layers ---
+  addRouteLayers(map);
+  addMountainVolcanoLayers(map);
+  addParkingLayers(map);
+  addSkiResortLayers(map);
+
+  // --- Tooltips ---
+  setupSkiResortTooltips(map);
+  setupTooltips(map);
+
+  // --- Filters ---
+  applyElevationFilters();
 
   /* ------------------------
-     MAP BOOTSTRAP
+     Parking → Google Maps directions
   ------------------------ */
-  async function bootstrapMap(map: maplibregl.Map) {
-    await loadIcons(map);
+  if (!parkingHandlersBoundRef.current) {
+    parkingHandlersBoundRef.current = true;
 
-    addRouteLayers(map);
-    addMountainVolcanoLayers(map);
-    addParkingLayers(map);
-    addSkiResortLayers(map);
+    map.on("click", "parking-points", (e) => {
+      const feature = e.features?.[0];
+      if (!feature || feature.geometry.type !== "Point") return;
 
-    setupSkiResortTooltips(map); 
-    setupTooltips(map);
-    applyElevationFilters();
+      const [lng, lat] = feature.geometry.coordinates as [number, number];
 
-    /* ------------------------
-       Parking → Google Maps directions
-    ------------------------ */
-    if (!parkingHandlersBoundRef.current) {
-      parkingHandlersBoundRef.current = true;
+      const isMobile =
+        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-      map.on("click", "parking-points", (e) => {
-        const feature = e.features?.[0];
-        if (!feature || feature.geometry.type !== "Point") return;
+      const url = isMobile
+        ? `https://maps.google.com/?daddr=${lat},${lng}`
+        : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 
-        const [lng, lat] = feature.geometry.coordinates as [number, number];
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
 
-        const isMobile =
-          /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    map.on("mouseenter", "parking-points", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
 
-        const url = isMobile
-          ? `https://maps.google.com/?daddr=${lat},${lng}`
-          : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-
-        window.open(url, "_blank", "noopener,noreferrer");
-      });
-
-      map.on("mouseenter", "parking-points", () => {
-        map.getCanvas().style.cursor = "pointer";
-      });
-
-      map.on("mouseleave", "parking-points", () => {
-        map.getCanvas().style.cursor = "";
-      });
-    }
-
-    if (!defaultsAppliedRef.current) {
-      updateMapLayerVisibility("osm-routes-line", true, "routes");
-      updateMapLayerVisibility("osm-routes-casing", true);
-      updateMapLayerVisibility("volcano-points", false, "volcanoes");
-      updateMapLayerVisibility("mountain-points", false, "mountains");
-      updateMapLayerVisibility("ski-resorts-points", false, "skiResorts");
-      updateMapLayerVisibility("parking-points", false, "parking");
-      updateMapLayerVisibility(
-        "protected-areas-fill",
-        false,
-        "protectedAreas"
-      );
-      defaultsAppliedRef.current = true;
-    }
-
-    requestAnimationFrame(() => map.resize());
-    setTimeout(() => map.resize(), 100);
+    map.on("mouseleave", "parking-points", () => {
+      map.getCanvas().style.cursor = "";
+    });
   }
+
+  /* ------------------------
+     DEFAULT VISIBILITY
+  ------------------------ */
+  if (!defaultsAppliedRef.current) {
+    updateMapLayerVisibility("osm-routes-line", true, "routes");
+    updateMapLayerVisibility("osm-routes-casing", true);
+    updateMapLayerVisibility("volcano-points", false, "volcanoes");
+    updateMapLayerVisibility("mountain-points", false, "mountains");
+    updateMapLayerVisibility("ski-resorts-points", false, "skiResorts");
+    updateMapLayerVisibility("parking-points", false, "parking");
+    updateMapLayerVisibility(
+      "protected-areas-fill",
+      false,
+      "protectedAreas"
+    );
+    defaultsAppliedRef.current = true;
+  }
+
+  requestAnimationFrame(() => map.resize());
+  setTimeout(() => map.resize(), 100);
+}
+
 
   /* ------------------------
      MAP INIT
@@ -338,10 +464,10 @@ useEffect(() => {
     map.once("load", () => {
       bootstrapMap(map);
       applyCameraMode(map, is3D);
-        // 👇 DEBUG ONLY
-  // @ts-ignore
-  window.__map = map;
-    });
+      // 👇 DEBUG ONLY
+      // @ts-ignore
+      window.__map = map;
+        });
 
     return () => {
       map.remove();
@@ -371,9 +497,7 @@ useEffect(() => {
       applyCameraMode(map, is3D);
     });
   }
-
   if (!mounted) return null;
-
   /* ------------------------
      RENDER
   ------------------------ */
@@ -415,6 +539,16 @@ useEffect(() => {
           updateMapLayerVisibility("protected-areas-icons", v);
           updateMapLayerVisibility("protected-areas-labels", v);
         }}
+          onToggleElevationColor={(v) => {
+    const map = mapRef.current;
+    if (!map) return;
+    setElevationColorVisible(map, v);
+  }}
+    onToggleSnowline={(v) => {
+    const map = mapRef.current;
+    if (!map) return;
+    setSnowlineVisible(map, v);
+  }}
           onToggleSkiOnly={() => {}}
         />
 
