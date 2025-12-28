@@ -18,7 +18,6 @@ interface Props {
   onToggleParking: (visible: boolean) => void;
   onToggleProtectedAreas: (visible: boolean) => void;
   onToggleElevationColor: (visible: boolean) => void;
-  onToggleSnowline: (visible: boolean) => void;
 }
 
 export default function SidebarFilters(props: Props) {
@@ -32,7 +31,6 @@ export default function SidebarFilters(props: Props) {
     onToggleParking,
     onToggleProtectedAreas,
     onToggleElevationColor,
-    onToggleSnowline,
   } = props;
 
   const [open, setOpen] = useState(false);
@@ -174,16 +172,6 @@ export default function SidebarFilters(props: Props) {
     toggleLayer("elevationColor", v, onToggleElevationColor)
   }
 />
-
-<ToggleRow
-  icon="/icons/ui/icon-snow.svg"
-  label="Snowline"
-  checked={layers.snowline}
-  onChange={(v) =>
-    toggleLayer("snowline", v, onToggleSnowline)
-  }
-/>
-
 
               {/* Layers */}
 {/* Layers */}

@@ -300,66 +300,6 @@ function addElevationColorLayer(map: maplibregl.Map) {
 }
 
 /* ------------------------
-   Snowline (approximate)
------------------------- */
-function addSnowlineLayer(map: maplibregl.Map) {
-  // Requires DEM (already added by elevation-color)
-  if (!map.getSource("dem")) return;
-
-  if (!map.getLayer("snowline")) {
-    map.addLayer({
-      id: "snowline",
-      type: "color-relief",
-      source: "dem",
-      paint: {
-        // OFF by default
-        "color-relief-opacity": 0,
-        "color-relief-color": [
-          "interpolate",
-          ["linear"],
-          ["elevation"],
-
-          // meters → subtle snow band
-  // Below snowline
-  0,    "#d6c3a3",
-  2400, "#edc379",
-
-  // Transition zone
-  2600, "#fcba03",
-  2900, "#2bed96",
-
-  // Likely snow
-  3200, "#7a0cf0",
-  3600, "#0cf0c2",
-
-  // High alpine
-  6000, "#0cf0f0",
-],
-      },
-    });
-  }
-
-  // Keep it under routes & labels
-  if (
-    map.getLayer("snowline") &&
-    map.getLayer("osm-routes-casing")
-  ) {
-    map.moveLayer("snowline", "osm-routes-casing");
-  }
-}
-
-function setSnowlineVisible(map: maplibregl.Map, visible: boolean) {
-  if (!map.getLayer("snowline")) return;
-
-  map.setPaintProperty(
-    "snowline",
-    "color-relief-opacity",
-    visible ? 0.45 : 0
-  );
-}
-
-
-/* ------------------------
    MAP BOOTSTRAP
 ------------------------ */
 async function bootstrapMap(map: maplibregl.Map) {
@@ -367,7 +307,6 @@ async function bootstrapMap(map: maplibregl.Map) {
 
   // --- Elevation color overlay (lightweight) ---
   addElevationColorLayer(map);
-  addSnowlineLayer(map); // 👈 NEW
   // --- Data layers ---
   addRouteLayers(map);
   addMountainVolcanoLayers(map);
@@ -543,11 +482,6 @@ async function bootstrapMap(map: maplibregl.Map) {
     const map = mapRef.current;
     if (!map) return;
     setElevationColorVisible(map, v);
-  }}
-    onToggleSnowline={(v) => {
-    const map = mapRef.current;
-    if (!map) return;
-    setSnowlineVisible(map, v);
   }}
           onToggleSkiOnly={() => {}}
         />
