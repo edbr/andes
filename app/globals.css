@@ -4,6 +4,13 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+    /* Andes brand */
+  --color-andes-primary: var(--andes-primary);
+  --color-andes-primary-foreground: var(--andes-primary-foreground);
+  --color-andes-sun: var(--andes-sun);
+  --color-andes-surface: var(--andes-surface);
+  --color-andes-border: var(--andes-border);
+    /* Base theme */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -44,6 +51,15 @@
 }
 
 :root {
+    /* Andes brand palette */
+  --andes-primary: oklch(0.46 0.08 215);      /* teal */
+  --andes-primary-foreground: oklch(0.985 0 0);
+
+  --andes-sun: oklch(0.86 0.17 85);           /* sun yellow */
+
+  --andes-surface: oklch(0.985 0.01 85);      /* warm off-white */
+  --andes-border: oklch(0.92 0.02 285);       /* soft lavender border */
+
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
