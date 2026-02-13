@@ -68,7 +68,7 @@ export default function AndesMap() {
       routes: true,
       volcanoes: false,
       mountains: false,
-      skiResorts: false,
+      skiResorts: true,
       parking: false,
       protectedAreas: true,
     });
@@ -123,6 +123,15 @@ export default function AndesMap() {
     }
 
     map.on("mousemove", "protected-areas-fill", (e) => {
+      // Give point features (e.g. ski resorts) hover priority over polygon tooltips.
+      const skiAtPointer = map.queryRenderedFeatures(e.point, {
+        layers: ["ski-resorts-points", "ski-resorts-labels"],
+      });
+      if (skiAtPointer.length > 0) {
+        popupRef.current?.remove();
+        return;
+      }
+
       const feature = e.features?.[0];
       if (!feature || !popupRef.current) return;
 
@@ -242,6 +251,19 @@ useEffect(() => {
     popup.remove();
   });
 }
+
+  /* ------------------------
+     LAYER ORDER
+  ------------------------ */
+  function prioritizeSkiResorts(map: maplibregl.Map) {
+    if (map.getLayer("ski-resorts-points")) {
+      map.moveLayer("ski-resorts-points");
+    }
+
+    if (map.getLayer("ski-resorts-labels")) {
+      map.moveLayer("ski-resorts-labels");
+    }
+  }
 /* ------------------------ elevation toggle----------------------- */
   function setElevationColorVisible(map: maplibregl.Map, visible: boolean) {
   if (!map.getLayer("elevation-color")) return;
@@ -312,6 +334,7 @@ async function bootstrapMap(map: maplibregl.Map) {
   addMountainVolcanoLayers(map);
   addParkingLayers(map);
   addSkiResortLayers(map);
+  prioritizeSkiResorts(map);
 
   // --- Tooltips ---
   setupSkiResortTooltips(map);
@@ -359,13 +382,17 @@ async function bootstrapMap(map: maplibregl.Map) {
     updateMapLayerVisibility("osm-routes-casing", true);
     updateMapLayerVisibility("volcano-points", false, "volcanoes");
     updateMapLayerVisibility("mountain-points", false, "mountains");
-    updateMapLayerVisibility("ski-resorts-points", false, "skiResorts");
+    updateMapLayerVisibility("ski-resorts-points", true, "skiResorts");
+    updateMapLayerVisibility("ski-resorts-labels", true);
     updateMapLayerVisibility("parking-points", false, "parking");
     updateMapLayerVisibility(
       "protected-areas-fill",
-      false,
+      true,
       "protectedAreas"
     );
+    updateMapLayerVisibility("protected-areas-outline", true);
+    updateMapLayerVisibility("protected-areas-icons", true);
+    updateMapLayerVisibility("protected-areas-labels", true);
     defaultsAppliedRef.current = true;
   }
 
@@ -467,7 +494,10 @@ async function bootstrapMap(map: maplibregl.Map) {
             updateMapLayerVisibility("mountain-points", v, "mountains")
           }
           onToggleSkiResorts={(v) =>
-            updateMapLayerVisibility("ski-resorts-points", v, "skiResorts")
+            {
+              updateMapLayerVisibility("ski-resorts-points", v, "skiResorts");
+              updateMapLayerVisibility("ski-resorts-labels", v);
+            }
           }
           onToggleParking={(v) =>
             updateMapLayerVisibility("parking-points", v, "parking")

@@ -45,7 +45,7 @@ export default function SidebarFilters(props: Props) {
     volcanoes: false,
     mountains: false,
     parking: false,
-    protectedAreas: false,
+    protectedAreas: true,
     elevationColor: false,
     snowline: false,
   });
