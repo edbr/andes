@@ -1,15 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { person, site } from "@/lib/site";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./globals.css";
 
-/* fonts unchanged */
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://andes-ski.vercel.app"),
+  metadataBase: new URL(site.url),
 
   title: {
-    default: "AndesMap",
+    default: site.title,
     template: "%s · AndesMap",
   },
 
@@ -28,7 +27,7 @@ export const metadata: Metadata = {
     "geospatial data",
   ],
 
-  authors: [{ name: "Eduardo Belluti" }],
+  authors: [{ name: person.name, url: person.url }],
   creator: "Eduardo Belluti",
 
   icons: {
@@ -47,21 +46,22 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 
   openGraph: {
-    title: "AndesMap",
+    title: site.title,
     description:
       "Explore Andean ski routes, terrain features, and critical geographic data in one focused, decision-driven map.",
-    url: "https://andes-ski.vercel.app",
     siteName: "AndesMap",
     locale: "en_US",
     type: "website",
+    images: [{ url: "/land/hero-map.png", alt: "AndesMap overview of Andean terrain and mountain routes" }],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "AndesMap",
+    title: site.title,
     description:
       "A focused geospatial tool for Andean ski routes and terrain exploration.",
     creator: "@edbelluti",
+    images: ["/land/hero-map.png"],
   },
 };
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { person, site } from "@/lib/site";
 
 export default function Footer() {
   return (
@@ -7,7 +8,7 @@ export default function Footer() {
         <span>
           Created by{" "}
           <Link
-            href="https://edbelluti.com/"
+            href={person.url}
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-andes-primary hover:underline"
@@ -16,6 +17,10 @@ export default function Footer() {
           </Link>
         </span>
 
+        <nav aria-label="Project information" className="flex flex-wrap gap-4">
+          <a href={site.writeupUrl} className="hover:underline">About this project</a>
+          <a href="https://eduardobelluti.com/projects/personal" className="hover:underline">More projects</a>
+        </nav>
         <span className="text-xs">
           © {new Date().getFullYear()} AndesMap
         </span>

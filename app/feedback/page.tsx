@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Share Feedback',
+  description: 'Help improve AndesMap by sharing feedback on Andean route exploration, map features, and backcountry planning.',
+  alternates: { canonical: "/feedback" },
+};
+
 import { submitFeedback } from "./submit-feedback";
 
 export default function FeedbackPage() {

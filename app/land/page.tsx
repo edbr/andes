@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'About AndesMap: Geospatial Design & Backcountry Planning',
+  description: 'Explore the purpose and design of AndesMap, Eduardo Belluti’s interactive map for Andean ski routes, volcanoes, protected areas, and mountain access.',
+  alternates: { canonical: "/land" },
+};
+
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { person, site } from "@/lib/site";
 
 
 export default function HomePage() {
@@ -36,6 +45,11 @@ export default function HomePage() {
             to support real decisions, not visual noise.
           </p>
 
+          <p className="mt-4 max-w-2xl text-muted-foreground">
+            Built by <a href={person.url} className="underline underline-offset-4">{person.name}</a>,
+            combining geospatial data, product design, and engineering.
+            {" "}<a href={site.writeupUrl} className="underline underline-offset-4">Read the project case study</a>.
+          </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/"
